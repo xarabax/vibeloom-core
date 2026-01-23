@@ -21,7 +21,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
     const dossierNames =
         uploadedFiles.length > 0
             ? uploadedFiles.slice(0, 2).map((f) => f.replace(/\.[^/.]+$/, "").slice(0, 12))
-            : ["Bando", "Financials"]
+            : ["Documento", "Dati"]
 
     // Handler per click sui nodi del flowchart (Trust Layer)
     const handleNodeClick = (node: FlowchartNode) => {
@@ -35,11 +35,11 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
         try {
             setExporting(true)
             const { generateAnalysisPDF } = await import("@/lib/export-pdf")
-            await generateAnalysisPDF(goal, result, `vibeloom-${Date.now()}`)
+            await generateAnalysisPDF(goal, result, `decision-mate-${Date.now()}`)
         } catch (error) {
-            console.error("Export failed:", error)
+            console.error("Esportazione fallita:", error)
             // Fallback: usa stampa browser
-            alert("PDF export requires jspdf package. Use Cmd+P to print instead.")
+            alert("Esportazione PDF non disponibile. Usa Cmd+P per stampare.")
         } finally {
             setExporting(false)
         }
@@ -51,7 +51,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
             <div className="px-6 py-8 border-b border-border">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-1">Analysis Complete</p>
+                        <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-1">Analisi Completata</p>
                         <h1 className="font-serif text-xl md:text-2xl text-foreground">{goal}</h1>
                     </div>
                     <div className="flex items-center gap-4">
@@ -61,14 +61,14 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-sans text-sm disabled:opacity-50"
                         >
                             <Download className={`w-4 h-4 ${exporting ? "animate-pulse" : ""}`} strokeWidth={1.5} />
-                            {exporting ? "Exporting..." : "Export"}
+                            {exporting ? "Esportazione..." : "Esporta"}
                         </button>
                         <button
                             onClick={onReset}
                             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors font-sans text-sm"
                         >
                             <RotateCcw className="w-4 h-4" strokeWidth={1.5} />
-                            New Analysis
+                            Nuova Analisi
                         </button>
                     </div>
                 </div>
@@ -79,7 +79,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                 <div className="bg-yellow-500/10 border-b border-yellow-500/20 px-6 py-3 flex items-center justify-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-yellow-500" />
                     <p className="font-sans text-xs text-yellow-500 uppercase tracking-widest">
-                        Simulation Mode (Mock Data)
+                        Modalità Simulazione (Dati Mock)
                     </p>
                 </div>
             )}
@@ -93,7 +93,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 <p className={`font-serif text-4xl ${getRiskScoreColor(result.riskScore)}`}>
                                     {result.riskScore}
                                 </p>
-                                <p className="text-xs text-muted-foreground uppercase tracking-widest">Risk Score</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-widest">Indice di Rischio</p>
                             </div>
                             <div className="h-12 w-px bg-border" />
                             <div>
@@ -145,7 +145,12 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                 <div className="px-6 py-4 bg-accent/5 border-b border-accent/20 animate-in slide-in-from-top-2 duration-300">
                     <div className="max-w-4xl mx-auto flex items-start justify-between">
                         <div>
-                            <p className="text-xs text-accent uppercase tracking-widest mb-1">{selectedNode.type}</p>
+                            <p className="text-xs text-accent uppercase tracking-widest mb-1">
+                                {selectedNode.type === "origin" ? "Origine" :
+                                 selectedNode.type === "document" ? "Documento" :
+                                 selectedNode.type === "convergence" ? "Convergenza" :
+                                 "Scenario"}
+                            </p>
                             <h3 className="font-serif text-lg text-foreground">{selectedNode.label}</h3>
                             {selectedNode.description && (
                                 <p className="text-sm text-muted-foreground mt-1">{selectedNode.description}</p>
@@ -153,7 +158,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                             {selectedNode.sourceRef && (
                                 <p className="text-xs text-accent mt-2 flex items-center gap-1">
                                     <FileText className="w-3 h-3" />
-                                    Source: {selectedNode.sourceRef}
+                                    Fonte: {selectedNode.sourceRef}
                                 </p>
                             )}
                         </div>
@@ -171,7 +176,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
             <div className="flex-1 flex flex-col lg:flex-row">
                 {/* Left Panel - Strategic Insight */}
                 <div className="flex-1 p-6 lg:p-12 lg:border-r border-border">
-                    <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-6">Strategic Insight</p>
+                    <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-6">Insight Strategico</p>
 
                     <div className="space-y-6">
                         <p className="font-serif text-lg md:text-xl text-foreground leading-relaxed">
@@ -180,30 +185,30 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
 
                         {/* Key Metrics */}
                         <div className="pt-6 border-t border-border">
-                            <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-4">Key Metrics</p>
+                            <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-4">Metriche Chiave</p>
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                                 <div>
                                     <p className="font-serif text-2xl text-accent">{result.keyMetrics.growthPotential}</p>
-                                    <p className="font-sans text-xs text-muted-foreground">Growth Potential</p>
+                                    <p className="font-sans text-xs text-muted-foreground">Potenziale di Crescita</p>
                                 </div>
                                 <div>
                                     <p className="font-serif text-2xl text-foreground">{result.keyMetrics.optimalWindow}</p>
-                                    <p className="font-sans text-xs text-muted-foreground">Optimal Window</p>
+                                    <p className="font-sans text-xs text-muted-foreground">Finestra Ottimale</p>
                                 </div>
                                 <div>
                                     <p className="font-serif text-2xl text-foreground">{result.keyMetrics.riskLevel}</p>
-                                    <p className="font-sans text-xs text-muted-foreground">Risk Level</p>
+                                    <p className="font-sans text-xs text-muted-foreground">Livello di Rischio</p>
                                 </div>
                                 {result.keyMetrics.investmentRequired && (
                                     <div>
                                         <p className="font-serif text-2xl text-foreground">{result.keyMetrics.investmentRequired}</p>
-                                        <p className="font-sans text-xs text-muted-foreground">Investment</p>
+                                        <p className="font-sans text-xs text-muted-foreground">Investimento</p>
                                     </div>
                                 )}
                                 {result.keyMetrics.probabilityOfSuccess && (
                                     <div>
                                         <p className="font-serif text-2xl text-accent">{result.keyMetrics.probabilityOfSuccess}</p>
-                                        <p className="font-sans text-xs text-muted-foreground">Success Probability</p>
+                                        <p className="font-sans text-xs text-muted-foreground">Probabilità di Successo</p>
                                     </div>
                                 )}
                             </div>
@@ -218,7 +223,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 >
                                     {showSources ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                     <span className="font-sans text-xs uppercase tracking-widest">
-                                        Source References ({result.sourceReferences.length})
+                                        Riferimenti alle Fonti ({result.sourceReferences.length})
                                     </span>
                                 </button>
                                 {showSources && (
@@ -232,7 +237,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                                         ref.reliability === "Medium" ? "bg-yellow-500/20 text-yellow-400" :
                                                         "bg-red-500/20 text-red-400"
                                                     }`}>
-                                                        {ref.reliability} Reliability
+                                                        {ref.reliability === "High" ? "Alta" : ref.reliability === "Medium" ? "Media" : "Bassa"} Affidabilità
                                                     </span>
                                                 </div>
                                                 <ul className="list-disc list-inside text-xs text-muted-foreground">
@@ -241,7 +246,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                                     ))}
                                                 </ul>
                                                 {ref.pageReferences && (
-                                                    <p className="text-xs text-accent mt-2">Pages: {ref.pageReferences.join(", ")}</p>
+                                                    <p className="text-xs text-accent mt-2">Pagine: {ref.pageReferences.join(", ")}</p>
                                                 )}
                                             </div>
                                         ))}
@@ -259,7 +264,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 >
                                     {showBlindSpots ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                                     <span className="font-sans text-xs uppercase tracking-widest">
-                                        ⚠️ Blind Spots ({result.blindSpots.length})
+                                        ⚠️ Punti Ciechi ({result.blindSpots.length})
                                     </span>
                                 </button>
                                 {showBlindSpots && (
@@ -279,7 +284,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
 
                 {/* Right Panel - Action Scenarios */}
                 <div className="flex-1 p-6 lg:p-12 bg-secondary/30">
-                    <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-6">Action Scenarios</p>
+                    <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-6">Scenari d'Azione</p>
 
                     <div className="space-y-6">
                         {result.actionScenarios.map((scenario, idx) => (
@@ -293,7 +298,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                     <span className={`font-sans text-xs uppercase tracking-widest ${
                                         scenario.recommended ? "text-accent" : "text-muted-foreground"
                                     }`}>
-                                        {scenario.recommended ? "★ Recommended" : "Alternative"}
+                                        {scenario.recommended ? "★ Raccomandato" : "Alternativa"}
                                     </span>
                                     <ArrowRight
                                         className="w-4 h-4 text-muted-foreground"
@@ -308,7 +313,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 {/* Key Actions */}
                                 {scenario.keyActions && scenario.keyActions.length > 0 && (
                                     <div className="mt-4">
-                                        <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Key Actions</p>
+                                        <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Azioni Chiave</p>
                                         <ul className="space-y-1">
                                             {scenario.keyActions.map((action, i) => (
                                                 <li key={i} className="text-xs text-foreground flex items-center gap-2">
@@ -322,7 +327,7 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 {/* Deal Breakers */}
                                 {scenario.dealBreakers && scenario.dealBreakers.length > 0 && (
                                     <div className="mt-3 p-2 bg-red-500/5 border border-red-500/20">
-                                        <p className="text-xs text-red-400 uppercase tracking-widest mb-1">⚠️ Deal Breakers</p>
+                                        <p className="text-xs text-red-400 uppercase tracking-widest mb-1">⚠️ Deal Breaker</p>
                                         {scenario.dealBreakers.map((db, i) => (
                                             <p key={i} className="text-xs text-red-300">{db}</p>
                                         ))}
@@ -332,9 +337,9 @@ export function StepVerdict({ goal, uploadedFiles = [], result, onReset }: StepV
                                 <div className="mt-4 pt-4 border-t border-border flex flex-wrap items-center gap-4">
                                     <span className="font-sans text-xs text-muted-foreground">Timeline: {scenario.timeline}</span>
                                     <span className="font-sans text-xs text-muted-foreground">•</span>
-                                    <span className="font-sans text-xs text-muted-foreground">Investment: {scenario.investment}</span>
+                                    <span className="font-sans text-xs text-muted-foreground">Investimento: {scenario.investment}</span>
                                     <span className="font-sans text-xs text-muted-foreground">•</span>
-                                    <span className="font-sans text-xs text-muted-foreground">Return: {scenario.returnPotential}</span>
+                                    <span className="font-sans text-xs text-muted-foreground">Ritorno: {scenario.returnPotential}</span>
                                 </div>
                             </div>
                         ))}

@@ -13,7 +13,7 @@ export class GeminiProvider implements AIAdapter {
         // Using "gemini-pro" as it is the most standard text model available.
         // If this fails with 404, the API key does not support any Gemini model.
         const model = this.client.getGenerativeModel({
-            model: "gemini-1.5-flash",
+            model: "gemini-2.5-flash",
             systemInstruction: STRATEGIC_ANALYSIS_PROMPT.replace("{{GOAL}}", goal),
             generationConfig: { responseMimeType: "application/json" },
         })

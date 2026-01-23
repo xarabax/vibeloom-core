@@ -34,10 +34,10 @@ function sanitizeGoal(input: string): string {
  */
 function validateGoal(goal: string): string | null {
     if (goal.length < MIN_GOAL_LENGTH) {
-        return `Please enter at least ${MIN_GOAL_LENGTH} characters`
+        return `Inserisci almeno ${MIN_GOAL_LENGTH} caratteri`
     }
     if (goal.length > MAX_GOAL_LENGTH) {
-        return `Maximum ${MAX_GOAL_LENGTH} characters allowed`
+        return `Massimo ${MAX_GOAL_LENGTH} caratteri consentiti`
     }
     // Check per pattern sospetti (prompt injection base)
     const suspiciousPatterns = [
@@ -48,7 +48,7 @@ function validateGoal(goal: string): string | null {
     ]
     for (const pattern of suspiciousPatterns) {
         if (pattern.test(goal)) {
-            return "Invalid input detected. Please rephrase your goal."
+            return "Input non valido. Riformula il tuo obiettivo."
         }
     }
     return null
@@ -108,7 +108,7 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center px-6 animate-in fade-in duration-500">
             <h1 className="font-serif text-3xl md:text-4xl lg:text-5xl text-foreground text-center leading-tight mb-12">
-                What goal are we weaving today?
+                Quale decisione dobbiamo analizzare?
             </h1>
             
             <div className="w-full max-w-2xl relative">
@@ -118,7 +118,7 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
                     value={goal}
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
-                    placeholder="Enter your strategic objective..."
+                    placeholder="Descrivi la decisione strategica da valutare..."
                     maxLength={MAX_GOAL_LENGTH}
                     className={`w-full bg-transparent border-0 border-b text-foreground text-lg md:text-xl font-sans placeholder:text-muted-foreground focus:outline-none py-4 transition-colors ${
                         error 
@@ -129,7 +129,7 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
                     aria-invalid={!!error}
                 />
                 
-                {/* Character counter */}
+                {/* Contatore caratteri */}
                 <div className="absolute right-0 top-full mt-2 flex items-center gap-2">
                     <span className={`font-sans text-xs tabular-nums ${
                         isOverLimit ? "text-red-500" :
@@ -141,7 +141,7 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
                 </div>
             </div>
 
-            {/* Error message */}
+            {/* Messaggio errore */}
             {error && (
                 <p 
                     id="goal-error" 
@@ -152,22 +152,22 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
                 </p>
             )}
 
-            {/* Hint */}
+            {/* Suggerimento */}
             <p className="mt-6 text-muted-foreground text-sm font-sans">
                 {goal.length >= MIN_GOAL_LENGTH 
-                    ? "Press Enter to continue" 
-                    : `Enter at least ${MIN_GOAL_LENGTH} characters`
+                    ? "Premi Invio per continuare" 
+                    : `Inserisci almeno ${MIN_GOAL_LENGTH} caratteri`
                 }
             </p>
 
-            {/* Examples (opzionale) */}
+            {/* Esempi */}
             <div className="mt-12 text-center">
-                <p className="text-muted-foreground text-xs uppercase tracking-widest mb-3">Examples</p>
+                <p className="text-muted-foreground text-xs uppercase tracking-widest mb-3">Esempi</p>
                 <div className="flex flex-wrap justify-center gap-2">
                     {[
-                        "Evaluate SIMEST funding opportunity for market expansion",
-                        "Analyze competitor acquisition target",
-                        "Assess new product line viability"
+                        "Valutare opportunità finanziamento SIMEST per espansione mercato",
+                        "Analizzare acquisizione competitor nel settore B2B",
+                        "Decidere se lanciare nuova linea di prodotto"
                     ].map((example, i) => (
                         <button
                             key={i}
@@ -177,7 +177,7 @@ export function StepGoal({ onSubmit }: StepGoalProps) {
                             }}
                             className="text-xs text-muted-foreground hover:text-foreground border border-border hover:border-accent px-3 py-1.5 transition-colors"
                         >
-                            {example.slice(0, 40)}...
+                            {example.slice(0, 45)}...
                         </button>
                     ))}
                 </div>

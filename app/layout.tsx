@@ -9,8 +9,8 @@ const playfair = Playfair_Display({ subsets: ["latin"], variable: "--font-playfa
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 
 export const metadata: Metadata = {
-  title: "VibeLoom — Strategic Decision Support",
-  description: "Weave strategic insights from your data with VibeLoom",
+  title: "Decision Mate — Supporto Decisionale Strategico",
+  description: "Analizza decisioni strategiche con l'aiuto dell'AI",
   generator: 'v0.app'
 }
 
@@ -20,7 +20,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="it" className="dark">
       <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
         {children}
         <Analytics />

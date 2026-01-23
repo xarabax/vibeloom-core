@@ -118,11 +118,11 @@ export function getRiskScoreColor(score: number): string {
 }
 
 /**
- * Calcola il label del risk score
+ * Calcola il label del risk score (in italiano)
  */
 export function getRiskScoreLabel(score: number): string {
-    if (score <= 25) return "Low Risk"
-    if (score <= 50) return "Moderate Risk"
-    if (score <= 75) return "High Risk"
-    return "Critical Risk"
+    if (score <= 25) return "Rischio Basso"
+    if (score <= 50) return "Rischio Moderato"
+    if (score <= 75) return "Rischio Alto"
+    return "Rischio Critico"
 }

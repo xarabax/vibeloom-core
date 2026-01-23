@@ -2,61 +2,133 @@
 
 import { useState, useCallback } from "react"
 import { StepGoal } from "@/components/wizard/step-goal"
-import { StepFeeding } from "@/components/wizard/step-feeding"
+import { StepMarket } from "@/components/wizard/step-market"
+import { StepContext } from "@/components/wizard/step-context"
 import { StepAnalysis } from "@/components/wizard/step-analysis"
 import { StepVerdict } from "@/components/wizard/step-verdict"
 
 import { AnalysisResult } from "@/lib/ai/types"
+import type { MarketData, ContextData, DecisionMateStep } from "@/lib/types/decision-mate"
 
-export type WizardStep = "goal" | "feeding" | "analysis" | "verdict"
-
+// Re-export tipi per compatibilità
+export type WizardStep = DecisionMateStep
 export type UploadedFile = File
-
 export type { AnalysisResult }
 
+/**
+ * Decision Mate Wizard
+ * 
+ * Flusso: Problem → Market Data → Context → Analysis → Verdict
+ */
 export function VibeLoomWizard() {
-  const [currentStep, setCurrentStep] = useState<WizardStep>("goal")
-  const [goal, setGoal] = useState("")
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
+    // === STATO WIZARD ===
+    const [currentStep, setCurrentStep] = useState<DecisionMateStep>("problem")
+    
+    // Step 1: Problem
+    const [problem, setProblem] = useState("")
+    
+    // Step 2: Market Data
+    const [marketData, setMarketData] = useState<MarketData | null>(null)
+    
+    // Step 3: Context & Actors
+    const [contextData, setContextData] = useState<ContextData | null>(null)
+    
+    // Step 4-5: Analysis Result (legacy, per compatibilità con StepAnalysis/StepVerdict)
+    const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
+    const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null)
 
-  const handleGoalSubmit = useCallback((goalText: string) => {
-    setGoal(goalText)
-    setCurrentStep("feeding")
-  }, [])
+    // === HANDLERS STEP 1: PROBLEM ===
+    const handleProblemSubmit = useCallback((problemText: string) => {
+        setProblem(problemText)
+        setCurrentStep("market")
+    }, [])
 
-  const handleFeedingComplete = useCallback((files: UploadedFile[]) => {
-    setUploadedFiles(files)
-    setCurrentStep("analysis")
-  }, [])
+    // === HANDLERS STEP 2: MARKET DATA ===
+    const handleMarketComplete = useCallback((data: MarketData) => {
+        setMarketData(data)
+        // Salva i file per compatibilità con StepAnalysis
+        if (data.files) {
+            setUploadedFiles(data.files)
+        }
+        setCurrentStep("context")
+    }, [])
 
-  const handleAnalysisComplete = useCallback((result: AnalysisResult) => {
-    setAnalysisResult(result)
-    setCurrentStep("verdict")
-  }, [])
+    const handleMarketBack = useCallback(() => {
+        setCurrentStep("problem")
+    }, [])
 
-  const handleReset = useCallback(() => {
-    setCurrentStep("goal")
-    setGoal("")
-    setUploadedFiles([])
-    setAnalysisResult(null)
-  }, [])
+    // === HANDLERS STEP 3: CONTEXT ===
+    const handleContextComplete = useCallback((data: ContextData) => {
+        setContextData(data)
+        setCurrentStep("analysis")
+    }, [])
 
-  return (
-    <main className="min-h-screen w-full bg-background text-foreground">
-      {currentStep === "goal" && <StepGoal onSubmit={handleGoalSubmit} />}
-      {currentStep === "feeding" && <StepFeeding goal={goal} onComplete={handleFeedingComplete} />}
-      {currentStep === "analysis" && (
-        <StepAnalysis goal={goal} files={uploadedFiles} onComplete={handleAnalysisComplete} />
-      )}
-      {currentStep === "verdict" && analysisResult && (
-        <StepVerdict
-          goal={goal}
-          uploadedFiles={uploadedFiles.map((f) => f.name)}
-          result={analysisResult}
-          onReset={handleReset}
-        />
-      )}
-    </main>
-  )
+    const handleContextBack = useCallback(() => {
+        setCurrentStep("market")
+    }, [])
+
+    // === HANDLERS STEP 4: ANALYSIS ===
+    const handleAnalysisComplete = useCallback((result: AnalysisResult) => {
+        setAnalysisResult(result)
+        setCurrentStep("verdict")
+    }, [])
+
+    // === RESET ===
+    const handleReset = useCallback(() => {
+        setCurrentStep("problem")
+        setProblem("")
+        setMarketData(null)
+        setContextData(null)
+        setUploadedFiles([])
+        setAnalysisResult(null)
+    }, [])
+
+    // === RENDER ===
+    return (
+        <main className="min-h-screen w-full bg-background text-foreground">
+            {/* Step 1: Problem Input */}
+            {currentStep === "problem" && (
+                <StepGoal onSubmit={handleProblemSubmit} />
+            )}
+            
+            {/* Step 2: Market Data */}
+            {currentStep === "market" && (
+                <StepMarket 
+                    problem={problem} 
+                    onComplete={handleMarketComplete}
+                    onBack={handleMarketBack}
+                />
+            )}
+            
+            {/* Step 3: Context & Actors */}
+            {currentStep === "context" && (
+                <StepContext
+                    problem={problem}
+                    onComplete={handleContextComplete}
+                    onBack={handleContextBack}
+                />
+            )}
+            
+            {/* Step 4: AI Analysis */}
+            {currentStep === "analysis" && (
+                <StepAnalysis 
+                    goal={problem} 
+                    files={uploadedFiles}
+                    marketData={marketData}
+                    contextData={contextData}
+                    onComplete={handleAnalysisComplete} 
+                />
+            )}
+            
+            {/* Step 5: Results/Verdict */}
+            {currentStep === "verdict" && analysisResult && (
+                <StepVerdict
+                    goal={problem}
+                    uploadedFiles={uploadedFiles.map((f) => f.name)}
+                    result={analysisResult}
+                    onReset={handleReset}
+                />
+            )}
+        </main>
+    )
 }
