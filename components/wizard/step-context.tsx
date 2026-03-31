@@ -107,7 +107,7 @@ export function StepContext({ problem, onComplete, onBack }: StepContextProps) {
             {/* Header */}
             <div className="mb-12">
                 <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-2">
-                    Passo 3 di 5 — Contesto e Attori
+                    Passo 3 di 9 — Contesto e Attori
                 </p>
                 <h1 className="font-serif text-2xl md:text-3xl text-foreground leading-tight mb-4">
                     Definisci il campo di battaglia

@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { AlertCircle, RotateCcw } from "lucide-react"
-import type { AnalysisResult } from "@/lib/ai/types"
-import type { MarketData, ContextData } from "@/lib/types/decision-mate"
+import type { MarketData, ContextData, BrainstormData } from "@/lib/types/decision-mate"
+import type { DecisionBoardResult } from "@/lib/ai/services/decision-board"
 
 interface StepAnalysisProps {
     /** Problema/obiettivo dallo Step 1 */
@@ -14,21 +14,24 @@ interface StepAnalysisProps {
     marketData: MarketData | null
     /** Dati di contesto dallo Step 3 */
     contextData: ContextData | null
+    /** Dati di brainstorming dallo Step 4 */
+    brainstormData: BrainstormData | null
     /** Callback quando l'analisi è completata */
-    onComplete: (result: AnalysisResult) => void
+    onComplete: (result: DecisionBoardResult) => void
 }
 
 /**
- * Step 4: Analisi AI
+ * Step 5: Analisi AI (Decision Board)
  * 
- * Invia tutti i dati raccolti (problema, market data, context) all'API
- * e mostra un'animazione di progresso mentre l'AI elabora.
+ * Invia il dilemma all'API Decision Board che esegue 3 agenti AI in parallelo.
+ * Mostra un'animazione di progresso mentre gli agenti elaborano.
  */
 export function StepAnalysis({ 
     goal, 
     files, 
     marketData, 
-    contextData, 
+    contextData,
+    brainstormData,
     onComplete 
 }: StepAnalysisProps) {
     const [progress, setProgress] = useState(0)
@@ -43,41 +46,59 @@ export function StepAnalysis({
                 setProgress(0)
                 setStatusMessage("Preparazione dati...")
 
-                // === COSTRUISCI FORMDATA CON TUTTI I DATI ===
-                const formData = new FormData()
-                
-                // Step 1: Problema
-                formData.append("goal", goal)
-                
-                // Step 2: Market Data
-                if (marketData) {
-                    if (marketData.source === "ai-generated" && marketData.aiSummary) {
-                        formData.append("marketSummary", marketData.aiSummary)
-                    }
-                    // I file sono già in `files`
+                // === COSTRUISCI IL DILEMMA ARRICCHITO ===
+                let dilemma = goal
+
+                // Aggiungi contesto dal market data
+                if (marketData?.aiSummary) {
+                    dilemma += `\n\nContesto di mercato:\n${marketData.aiSummary}`
                 }
-                
-                // Step 2: Files
-                files.forEach((file) => {
-                    formData.append("files", file)
-                })
-                
-                // Step 3: Context Data (serializzato come JSON)
+
+                // Aggiungi contesto dal context data
                 if (contextData) {
-                    formData.append("contextData", JSON.stringify(contextData))
+                    const contextParts: string[] = []
+                    if (contextData.targetAudience) {
+                        contextParts.push(`Target: ${contextData.targetAudience}`)
+                    }
+                    if (contextData.businessModel) {
+                        contextParts.push(`Business Model: ${contextData.businessModel}`)
+                    }
+                    if (contextData.primaryGoal) {
+                        contextParts.push(`Obiettivo primario: ${contextData.primaryGoal}`)
+                    }
+                    if (contextData.constraints && contextData.constraints.length > 0) {
+                        contextParts.push(`Vincoli: ${contextData.constraints.join(", ")}`)
+                    }
+                    if (contextParts.length > 0) {
+                        dilemma += `\n\nContesto decisionale:\n${contextParts.join("\n")}`
+                    }
+                }
+
+                // Aggiungi focus question dal brainstorming
+                if (brainstormData?.focusQuestion) {
+                    dilemma += `\n\nDomanda specifica del Board:\n${brainstormData.focusQuestion}`
                 }
 
                 setProgress(10)
                 setStatusMessage("Invio al motore AI...")
 
-                // === CHIAMATA API ===
-                const response = await fetch("/api/analyze", {
+                // === CHIAMATA API DECISION BOARD ===
+                // Passa gli advisor selezionati per ottenere analisi solo da quelli
+                const selectedAdvisors = brainstormData?.selectedAdvisors || ["sniper", "guardian", "vc"]
+                
+                const response = await fetch("/api/decision-board", {
                     method: "POST",
-                    body: formData,
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ 
+                        dilemma,
+                        advisors: selectedAdvisors 
+                    }),
                 })
 
                 setProgress(50)
-                setStatusMessage("L'AI sta analizzando la tua decisione...")
+                setStatusMessage("I 3 advisor stanno analizzando...")
 
                 if (!response.ok) {
                     const errData = await response.json().catch(() => ({}))
@@ -86,12 +107,16 @@ export function StepAnalysis({
 
                 const result = await response.json()
 
+                if (!result.success) {
+                    throw new Error(result.error || "Errore durante l'analisi")
+                }
+
                 setProgress(100)
                 setStatusMessage("Analisi completata!")
                 
                 // Piccolo delay per mostrare il completamento
                 setTimeout(() => {
-                    onComplete(result)
+                    onComplete(result.data)
                 }, 800)
 
             } catch (error) {
@@ -115,7 +140,7 @@ export function StepAnalysis({
         }
 
         return () => clearInterval(interval)
-    }, [goal, files, marketData, contextData, onComplete, retryCount, error])
+    }, [goal, files, marketData, contextData, brainstormData, onComplete, retryCount, error])
 
     // === ERROR STATE ===
     if (error) {
@@ -198,19 +223,17 @@ export function StepAnalysis({
                 {statusMessage}
             </p>
             
-            {/* Context summary */}
-            {contextData && (
+            {/* Board summary */}
+            {brainstormData && brainstormData.selectedAdvisors && brainstormData.selectedAdvisors.length > 0 && (
                 <p className="text-muted-foreground/60 font-sans text-xs mb-8 max-w-md text-center">
-                    Ottimizzazione per <span className="text-accent">{
-                        contextData.primaryGoal === "profit" ? "profitto" :
-                        contextData.primaryGoal === "growth" ? "crescita" :
-                        contextData.primaryGoal === "retention" ? "retention" :
-                        contextData.primaryGoal === "speed" ? "velocità" :
-                        "qualità"
-                    }</span>
-                    {contextData.constraints.length > 0 && (
-                        <> con {contextData.constraints.length} vincol{contextData.constraints.length > 1 ? 'i' : 'o'}</>
-                    )}
+                    Il tuo Board: <span className="text-accent">
+                        {brainstormData.selectedAdvisors.map(id => 
+                            id === "sniper" ? "The Sniper" :
+                            id === "vc" ? "The VC" :
+                            id === "guardian" ? "The Guardian" :
+                            "The Mentor"
+                        ).join(" + ")}
+                    </span>
                 </p>
             )}
 

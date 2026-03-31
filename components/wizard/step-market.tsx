@@ -167,7 +167,7 @@ export function StepMarket({ problem, onComplete, onBack }: StepMarketProps) {
             {/* Header con problema */}
             <div className="mb-12">
                 <p className="text-muted-foreground font-sans text-xs uppercase tracking-widest mb-2">
-                    Passo 2 di 5 — Dati di Mercato
+                    Passo 2 di 9 — Dati di Mercato
                 </p>
                 <h1 className="font-serif text-2xl md:text-3xl text-foreground leading-tight mb-4">
                     Alimenta il contesto
