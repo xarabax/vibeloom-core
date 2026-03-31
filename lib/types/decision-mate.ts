@@ -209,17 +209,13 @@ export interface ScenarioSelectionData {
 
 // === STATO WIZARD ===
 
-/** Step del wizard Decision Mate */
+/** Step del wizard Decision Mate (Versione 2.0) */
 export type DecisionMateStep = 
-    | "problem"            // Step 1: Input problema
-    | "market"             // Step 2: Dati di mercato
-    | "context"            // Step 3: Contesto e Attori
-    | "brainstorm"         // Step 4: Assembla il Board
-    | "analysis"           // Step 5: Analisi AI
-    | "decision-board"     // Step 6: Decision Board (verdetti iniziali)
-    | "discussion"         // Step 7: Discussione + Selezione Scenari
-    | "scenario-builder"   // Step 8: Costruttore Scenari Guidato
-    | "verdict"            // Step 9: Verdetto finale
+    | "lobby"              // Nuova Home: Audit vs Custom
+    | "board-assembly"     // Scelta agenti visiva
+    | "session"            // Chat room & upload
+    | "flowchart"          // Mappa visiva scenari
+    | "execution"          // Generazione verdetto e asset
 
 /** Stato completo del wizard */
 export interface DecisionMateState {

@@ -124,3 +124,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide Clerk Development Mode Badge and Footer Overrides */
+.cl-internal-b3al4t,
+.cl-userButtonPopoverFooter,
+.cl-internal-1dauvpw {
+  display: none !important;
+}

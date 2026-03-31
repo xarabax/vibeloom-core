@@ -8,15 +8,16 @@
  */
 
 import { useState } from "react"
-import { 
-    Download, 
+import {
+    Download,
     Share2,
     RotateCcw,
     CheckSquare,
     AlertTriangle,
     Lightbulb,
     FileText,
-    Send
+    Send,
+    Clipboard
 } from "lucide-react"
 import type { Scenario } from "@/lib/types/scenario-explorer"
 import type { AgentAnalysis } from "@/lib/ai/services/decision-board"
@@ -42,13 +43,14 @@ interface StepVerdictProps {
 // COMPONENT
 // ============================================================================
 
-export function StepVerdict({ 
-    goal, 
+export function StepVerdict({
+    goal,
     selectedScenario,
-    onReset 
+    onReset
 }: StepVerdictProps) {
     const [exporting, setExporting] = useState(false)
     const [sending, setSending] = useState(false)
+    const [copying, setCopying] = useState(false)
 
     // Estrai azioni dalle prime fasi (Immediate + Short-term)
     const actionPlan = selectedScenario.steps
@@ -84,6 +86,57 @@ export function StepVerdict({
         setSending(false)
     }
 
+    // NEW: Copia Action Plan
+    const handleCopyActionPlan = async () => {
+        setCopying(true)
+        try {
+            const planMarkdown = [
+                `# Action Plan: ${selectedScenario.title}`,
+                ``,
+                `**Goal:** ${goal}`,
+                ``,
+                `## Checklist Azioni Immediate`,
+                ...actionPlan.map(step => `- [ ] **${step.action}**: ${step.description}`),
+                ``,
+                `**Owner:** TBD`
+            ].join("\n")
+
+            await navigator.clipboard.writeText(planMarkdown)
+            // Feedback visivo breve
+            await new Promise(r => setTimeout(r, 800))
+        } catch (err) {
+            console.error("Failed to copy", err)
+        } finally {
+            setCopying(false)
+        }
+    }
+
+    // NEW: Scarica Business Case PDF (Simulazione)
+    const handleDownloadBusinessCase = async () => {
+        window.alert("Generazione PDF Business Case in corso...")
+
+        // Mock structure
+        const businessCaseMock = {
+            executiveSummary: {
+                title: selectedScenario.title,
+                why: selectedScenario.description
+            },
+            financialOutlook: {
+                upside: "Dati VC Advisor (Simulated)",
+                cost: "Dati Sniper Advisor (Simulated)"
+            },
+            riskAnalysis: {
+                risks: allRisks,
+                mitigation: "Guardian Advisor Unmitigated Risks"
+            },
+            recommendation: "Il Board Virtuale raccomanda l'approvazione immediata."
+        }
+
+        console.log("=== PDF BUSINESS CASE GENERATED ===")
+        console.log(JSON.stringify(businessCaseMock, null, 2))
+        console.log("===================================")
+    }
+
     return (
         <div className="min-h-screen flex flex-col bg-background animate-in fade-in duration-500">
             {/* Header Executive */}
@@ -106,7 +159,7 @@ export function StepVerdict({
                                 Risposta strategica al dilemma: <span className="text-foreground italic">"{goal}"</span>
                             </p>
                         </div>
-                        
+
                         {/* Actions */}
                         <div className="flex items-center gap-3">
                             <button
@@ -142,7 +195,7 @@ export function StepVerdict({
 
             {/* Main Content - 2 Columns */}
             <div className="flex-1 max-w-5xl mx-auto px-6 py-12 w-full grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-12">
-                
+
                 {/* SX: Action Plan */}
                 <div className="space-y-8">
                     <div>
@@ -150,7 +203,7 @@ export function StepVerdict({
                             <CheckSquare className="w-5 h-5 text-accent" />
                             <h2 className="font-serif text-2xl">Action Plan Immediato</h2>
                         </div>
-                        
+
                         <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
                             <div className="divide-y divide-border">
                                 {actionPlan.length > 0 ? (
@@ -210,7 +263,7 @@ export function StepVerdict({
 
                 {/* DX: Guardrails (Risks & Assumptions) */}
                 <div className="space-y-8">
-                    
+
                     {/* Premortem / Rischi */}
                     <div className="bg-destructive/5 border border-destructive/20 rounded-xl p-6">
                         <div className="flex items-center gap-2 mb-4 text-destructive">
@@ -250,7 +303,7 @@ export function StepVerdict({
                             )}
                         </ul>
                     </div>
-                    
+
                     {/* Document details */}
                     <div className="p-4 rounded-xl bg-muted/10 border border-border">
                         <div className="flex items-center gap-2 mb-2">
@@ -264,20 +317,55 @@ export function StepVerdict({
 
                 </div>
             </div>
-            
-            {/* Footer Reset */}
-            <div className="py-8 text-center border-t border-border mt-auto">
-                <button
-                    onClick={onReset}
-                    className="
-                        inline-flex items-center gap-2 px-6 py-3
-                        text-muted-foreground hover:text-foreground transition-colors
-                        font-sans text-sm
-                    "
-                >
-                    <RotateCcw className="w-4 h-4" />
-                    Inizia nuoava analisi
-                </button>
+
+            {/* Footer */}
+            <div className="py-8 bg-muted/10 border-t border-border mt-auto">
+                <div className="max-w-5xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-6">
+
+                    {/* Export Strategy */}
+                    <div className="flex items-center gap-3">
+                        <div className="text-sm font-medium text-muted-foreground mr-2">Export Strategy:</div>
+
+                        <button
+                            onClick={handleCopyActionPlan}
+                            disabled={copying}
+                            className="
+                                flex items-center gap-2 px-4 py-2 rounded-lg
+                                bg-card text-foreground border border-border shadow-sm
+                                hover:bg-muted transition-all text-sm font-medium
+                                disabled:opacity-50
+                            "
+                        >
+                            <Clipboard className={`w-4 h-4 ${copying ? "text-emerald-500" : ""}`} />
+                            {copying ? "Copiato!" : "Copia Action Plan"}
+                        </button>
+
+                        <button
+                            onClick={handleDownloadBusinessCase}
+                            className="
+                                flex items-center gap-2 px-4 py-2 rounded-lg
+                                bg-card text-foreground border border-border shadow-sm
+                                hover:bg-muted transition-all text-sm font-medium
+                            "
+                        >
+                            <FileText className="w-4 h-4" />
+                            Scarica Business Case
+                        </button>
+                    </div>
+
+                    {/* Reset */}
+                    <button
+                        onClick={onReset}
+                        className="
+                            inline-flex items-center gap-2 px-6 py-2
+                            text-muted-foreground hover:text-destructive transition-colors
+                            font-sans text-sm
+                        "
+                    >
+                        <RotateCcw className="w-4 h-4" />
+                        Inizia nuova analisi
+                    </button>
+                </div>
             </div>
         </div>
     )
