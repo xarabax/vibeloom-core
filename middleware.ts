@@ -1,7 +1,13 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server"
 
 // Proteggiamo tutta l'applicazione tranne le rotte di default di Clerk (se si usano Custom Pages) o webhook
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)', '/api/webhooks(.*)'])
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)', 
+  '/sign-up(.*)', 
+  '/api/webhooks(.*)',
+  '/api/upload(.*)'
+])
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {

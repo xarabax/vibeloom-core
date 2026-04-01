@@ -1,6 +1,7 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
+import { useAuth, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Paperclip, Loader2, PlayCircle, FileText } from "lucide-react"
@@ -16,6 +17,27 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
     const [isUploading, setIsUploading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    
+    // Clerk hooks for lazy authentication
+    const { isSignedIn, isLoaded } = useAuth()
+    const clerk = useClerk()
+
+    // Recupero magico dei dati se l'utente è stato rimbalzato dal Social Login
+    useEffect(() => {
+        if (isLoaded && isSignedIn) {
+            const savedState = sessionStorage.getItem("vibeloom_pending_discovery")
+            if (savedState) {
+                try {
+                    const parsed = JSON.parse(savedState)
+                    sessionStorage.removeItem("vibeloom_pending_discovery")
+                    // Se aveva un'elaborazione in sospeso, la spinge in automatico!
+                    onSubmit(parsed.text, parsed.fileText, parsed.fileName)
+                } catch (e) {
+                    console.error("Errore fallback session storage", e)
+                }
+            }
+        }
+    }, [isLoaded, isSignedIn, onSubmit])
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0]
@@ -56,6 +78,18 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
             setError("Scrivi qualcosa o allega un documento per iniziare l'analisi.")
             return
         }
+
+        if (!isSignedIn) {
+            // Se non è loggato, congeliamo l'input in memoria
+            sessionStorage.setItem("vibeloom_pending_discovery", JSON.stringify({
+                text, fileText, fileName
+            }))
+            // Apriamo il SignIn. Clerk gestirà l'autenticazione redirigendo se necessario.
+            clerk.openSignIn({ fallbackRedirectUrl: "/" })
+            return
+        }
+
+        // Utente già autenticato, procediamo regolarmente.
         onSubmit(text, fileText, fileName)
     }
 
