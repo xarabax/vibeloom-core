@@ -76,9 +76,18 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
 
         const result = await model.generateContent(prompt)
         const responseText = result.response.text()
-        
-        const opportunities = JSON.parse(responseText)
-        
+        let cleanText = responseText.trim()
+        if (cleanText.startsWith("```json")) {
+            cleanText = cleanText.substring(7)
+        } else if (cleanText.startsWith("```")) {
+            cleanText = cleanText.substring(3)
+        }
+        if (cleanText.endsWith("```")) {
+            cleanText = cleanText.substring(0, cleanText.length - 3)
+        }
+        cleanText = cleanText.trim()
+
+        const opportunities = JSON.parse(cleanText)
         // SCALA IL CREDITO
         await client.users.updateUserMetadata(userId, {
             privateMetadata: {
