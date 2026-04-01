@@ -16,7 +16,6 @@ interface Message {
     isFileUploaded?: boolean
 }
 
-// Aggiungiamo il parser per migliorare l'UX del testo AI
 const formatSimpleMarkdown = (text: string) => {
     return text.split('\n').map((line, i) => {
         if (!line.trim()) return <div key={i} className="h-1" />
@@ -27,16 +26,16 @@ const formatSimpleMarkdown = (text: string) => {
         const isList = formattedLine.trim().startsWith('* ') || formattedLine.trim().startsWith('- ');
         if (isList) formattedLine = formattedLine.trim().substring(2);
         
-        const isNumbered = formattedLine.trim().match(/^\d+\.\s/);
-        if (isNumbered) formattedLine = formattedLine.replace(/^\d+\.\s/, '');
+        const numMatch = formattedLine.trim().match(/^(\d+)\.\s/);
+        if (numMatch) formattedLine = formattedLine.replace(/^\d+\.\s/, '');
 
         // Bold
         const parts = formattedLine.split(/(\*\*.*?\*\*)/g);
 
         return (
-            <p key={i} className={`text-sm leading-relaxed ${isList || isNumbered ? 'pl-5 relative border-l border-border/40 ml-1 py-1' : 'mb-2'}`}>
+            <p key={i} className={`text-sm leading-relaxed ${isList ? 'pl-5 relative border-l border-border/40 ml-1 py-1' : numMatch ? 'pl-7 relative ml-1 py-1' : 'mb-2'}`}>
                 {isList && <span className="absolute left-0 top-2.5 w-1.5 h-1.5 rounded-full bg-primary/60"></span>}
-                {isNumbered && <span className="absolute left-[1px] top-1 text-xs font-bold text-primary/80">→</span>}
+                {numMatch && <span className="absolute left-0 top-1 font-mono text-[11px] font-bold text-primary/80 bg-primary/10 w-5 h-5 flex items-center justify-center rounded-sm border border-primary/20">{numMatch[1]}</span>}
                 {parts.map((part, pIdx) => {
                     if (part.startsWith('**') && part.endsWith('**')) {
                         return <strong key={pIdx} className="text-foreground font-extrabold">{part.slice(2, -2)}</strong>
@@ -329,7 +328,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
     }
 
     return (
-        <div className="flex flex-col h-[80vh] max-w-5xl mx-auto border border-border rounded-xl overflow-hidden bg-card/30 animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
+        <div className="flex flex-col h-[88vh] max-w-5xl mx-auto border border-border rounded-xl overflow-hidden bg-card/30 animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
             {/* Header Chat */}
             <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
                 <div>
