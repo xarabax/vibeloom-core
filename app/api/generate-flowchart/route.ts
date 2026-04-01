@@ -36,7 +36,7 @@ export async function POST(req: Request) {
             systemInstruction: "Sei il Master Strategist del Board. Il tuo compito è leggere la trascrizione della riunione e sintetizzare ESATTAMENTE 3 scenari strategici azionabili (Conservativo, Bilanciato, Aggressivo).",
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: scenarioSchema
+                responseSchema: scenarioSchema as any
             }
         })
 

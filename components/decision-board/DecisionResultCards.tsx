@@ -225,7 +225,7 @@ function AgentCard({
 
     return (
         <motion.div
-            variants={cardVariants}
+            variants={cardVariants as any}
             whileHover={{ 
                 y: -8,
                 transition: { duration: 0.2 }

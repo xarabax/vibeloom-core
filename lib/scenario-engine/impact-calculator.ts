@@ -532,7 +532,7 @@ export function evaluateScenario(scenario: Scenario): ScenarioEvaluation {
     const pros_cons = generateDynamicProsCons(scenario, adjustedScores)
     
     return {
-        scenario_id: scenario.id,
+        scenario_id: scenario.id as any,
         adjusted_scores: adjustedScores,
         pros_cons,
         delta_from_original: {

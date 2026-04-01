@@ -478,7 +478,7 @@ export class DecisionBoardService {
                 generationConfig: {
                     temperature: config.temperature,
                     responseMimeType: "application/json",
-                    responseSchema: AGENT_OUTPUT_SCHEMA
+                    responseSchema: AGENT_OUTPUT_SCHEMA as any
                 },
                 systemInstruction: config.systemPrompt
             })

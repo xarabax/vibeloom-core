@@ -68,7 +68,7 @@ function MobileTabs({ scenarios, activeTab, weights, onTabChange }: MobileTabsPr
             {scenarios.map((scenario) => (
                 <button
                     key={scenario.id}
-                    onClick={() => onTabChange(scenario.id)}
+                    onClick={() => onTabChange(scenario.id as any)}
                     className={`
                         flex-1 py-2 px-3 rounded-lg text-xs font-medium
                         transition-all
@@ -326,12 +326,12 @@ export function ScenarioExplorerPage({
                                 scenario={scenario}
                                 weight={active_weights[scenario.id]}
                                 expandedNodes={expanded_nodes[scenario.id]}
-                                onToggleNode={(nodeId) => handleToggleNode(scenario.id, nodeId)}
+                                onToggleNode={(nodeId) => handleToggleNode(scenario.id as any, nodeId)}
                                 onStepAssumptionsChange={(stepId, values) => 
-                                    handleStepAssumptionsChange(scenario.id, stepId, values)
+                                    handleStepAssumptionsChange(scenario.id as any, stepId, values)
                                 }
                                 onStepRisksChange={(stepId, values) => 
-                                    handleStepRisksChange(scenario.id, stepId, values)
+                                    handleStepRisksChange(scenario.id as any, stepId, values)
                                 }
                             />
                         ))}
@@ -347,12 +347,12 @@ export function ScenarioExplorerPage({
                                     scenario={scenario}
                                     weight={active_weights[scenario.id]}
                                     expandedNodes={expanded_nodes[scenario.id]}
-                                    onToggleNode={(nodeId) => handleToggleNode(scenario.id, nodeId)}
+                                    onToggleNode={(nodeId) => handleToggleNode(scenario.id as any, nodeId)}
                                     onStepAssumptionsChange={(stepId, values) => 
-                                        handleStepAssumptionsChange(scenario.id, stepId, values)
+                                        handleStepAssumptionsChange(scenario.id as any, stepId, values)
                                     }
                                     onStepRisksChange={(stepId, values) => 
-                                        handleStepRisksChange(scenario.id, stepId, values)
+                                        handleStepRisksChange(scenario.id as any, stepId, values)
                                     }
                                 />
                             ))

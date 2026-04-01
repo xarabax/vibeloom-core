@@ -226,10 +226,10 @@ export function StrategyMixer({
                     {scenarios.map((scenario) => (
                         <ScenarioSlider
                             key={scenario.id}
-                            scenarioId={scenario.id}
+                            scenarioId={scenario.id as any}
                             scenario={scenario}
                             value={weights[scenario.id]}
-                            onChange={(val) => handleSliderChange(scenario.id, val)}
+                            onChange={(val) => handleSliderChange(scenario.id as any, val)}
                         />
                     ))}
                 </div>
