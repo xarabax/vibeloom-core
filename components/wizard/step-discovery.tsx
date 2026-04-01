@@ -53,7 +53,9 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                 
                 if (data.opportunities) {
                     setOpportunities(data.opportunities)
-                    if (data.mock) setError("Rete instabile. Visualizzazione di opportunità standard.")
+                    if (data.mock) {
+                        setError(`Rete instabile. Visualizzazione di opportunità standard. ${data.debugInfo ? `[DEBUG: ${data.debugInfo}]` : ''}`)
+                    }
                 } else {
                     throw new Error("Formato json inaspettato dal server")
                 }

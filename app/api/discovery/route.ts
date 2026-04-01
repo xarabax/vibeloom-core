@@ -127,6 +127,7 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
 
         return NextResponse.json({ 
             error: "Impossibile generare le opportunità in tempo reale.", 
+            debugInfo: error instanceof Error ? error.message : String(error),
             opportunities: mockOpps,
             mock: true 
         }, { status: 200 })
