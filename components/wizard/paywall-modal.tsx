@@ -43,7 +43,7 @@ export function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
                         <Button 
                             size="lg" 
                             className="w-full font-semibold shadow-lg shadow-primary/20 group h-12"
-                            onClick={() => window.open('mailto:info@vibeloom.com?subject=Richiesta Sblocco Premium VibeLoom', '_blank')}
+                            onClick={() => window.open('https://buy.stripe.com/test_fZu8wP1qIb4QcWmbyod7q00', '_blank')}
                         >
                             Sblocca Ora
                             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
