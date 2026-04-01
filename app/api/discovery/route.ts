@@ -60,7 +60,7 @@ export async function POST(req: Request) {
             systemInstruction: "Sei l'AI Decision & Adoption Engine di VibeLoom. Il tuo obiettivo è analizzare il business dell'utente e generare ESATTAMENTE 3 diagnosi operativo-tecniche usando il formato JSON. Sii telegrafico, spietato e ultra-operativo.",
             generationConfig: {
                 responseMimeType: "application/json",
-                responseSchema: discoverySchema
+                responseSchema: discoverySchema as any
             }
         })
 
