@@ -42,9 +42,10 @@ export async function POST(req: Request) {
         const user = await client.users.getUser(userId)
         
         const currentCalls = (user.privateMetadata.api_calls as number) || 0;
+        const isPremium = user.privateMetadata.is_premium === true;
         
         // PAYWALL BLOCK
-        if (currentCalls >= MAX_FREE_CALLS) {
+        if (!isPremium && currentCalls >= MAX_FREE_CALLS) {
             return NextResponse.json({ error: "PAYWALL_ACTIVE" }, { status: 403 })
         }
 
@@ -88,12 +89,14 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
         cleanText = cleanText.trim()
 
         const opportunities = JSON.parse(cleanText)
-        // SCALA IL CREDITO
-        await client.users.updateUserMetadata(userId, {
-            privateMetadata: {
-                api_calls: currentCalls + 1
-            }
-        });
+        // SCALA IL CREDITO SOLO SE NON E' PREMIUM
+        if (!isPremium) {
+            await client.users.updateUserMetadata(userId, {
+                privateMetadata: {
+                    api_calls: currentCalls + 1
+                }
+            });
+        }
 
         return NextResponse.json({ opportunities })
         

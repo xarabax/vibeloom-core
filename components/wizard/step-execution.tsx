@@ -6,6 +6,7 @@ import { CheckCircle, Download, FileJson, Play, Loader2, Target, ShieldAlert, Cp
 import { generateExecutiveBoardPDF } from "@/lib/services/pdf-generator"
 import { downloadBlueprintJSON, BlueprintSchema } from "@/lib/services/blueprint-generator"
 
+import { useUser } from "@clerk/nextjs"
 import { PaywallModal } from "./paywall-modal"
 
 interface StepExecutionProps {
@@ -15,6 +16,9 @@ interface StepExecutionProps {
 }
 
 export function StepExecution({ goal, scenario, onReset }: StepExecutionProps) {
+    const { user } = useUser()
+    const isPremium = user?.publicMetadata?.is_premium === true;
+
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
     const [isGeneratingJSON, setIsGeneratingJSON] = useState(false)
 
@@ -26,11 +30,22 @@ export function StepExecution({ goal, scenario, onReset }: StepExecutionProps) {
     const handleDownloadPDF = async () => {
         setIsGeneratingPDF(true)
         
-        // Trigger Paywall per la risorsa Premium (PDF McKinsey)
-        setTimeout(() => {
-            setIsGeneratingPDF(false)
-            setIsPaywallOpen(true)
-        }, 800)
+        if (isPremium) {
+            // LASCIA SCARICARE IL PDF
+            try {
+                await generateExecutiveBoardPDF("pdf-template-container", "VibeLoom-Verbale-Esecutivo.pdf")
+            } catch (error) {
+                console.error(error)
+            } finally {
+                setTimeout(() => setIsGeneratingPDF(false), 800)
+            }
+        } else {
+            // Trigger Paywall per la risorsa Premium (PDF McKinsey)
+            setTimeout(() => {
+                setIsGeneratingPDF(false)
+                setIsPaywallOpen(true)
+            }, 800)
+        }
     }
 
     const handleDownloadJSON = () => {

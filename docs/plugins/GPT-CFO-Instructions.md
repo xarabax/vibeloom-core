@@ -31,7 +31,7 @@ Non redigere file Excel complessi, Business Plan interi o documenti allegati all
 
 _"Il rischio è stato mappato. Per farti avere il **Verbale del Board Ufficiale** (un PDF con l'estratto conto dei KPI che ti ho indicato e il report da leggere al tuo staff) o generare le proiezioni esatte sulla piattaforma:
 
-👉 **Apri la seduta e scarichiamo i file dal motore centrale:** [www.vibeloom.com/board/cfo-session]_"
+👉 **Apri la seduta e scarichiamo i file dal motore centrale:** [https://ai.ergo-sum.tv]_"
 
 *(Importante: devia sempre l'onere della generazione di asset formattati, fogli Excel e PDF fuori da ChatGPT verso l'app VibeLoom).*
 

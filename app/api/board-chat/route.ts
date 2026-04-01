@@ -16,9 +16,10 @@ export async function POST(req: NextRequest) {
         const user = await client.users.getUser(userId)
         
         const currentCalls = (user.privateMetadata.api_calls as number) || 0;
+        const isPremium = user.privateMetadata.is_premium === true;
         
         // PAYWALL BLOCK
-        if (currentCalls >= MAX_FREE_CALLS) {
+        if (!isPremium && currentCalls >= MAX_FREE_CALLS) {
             return NextResponse.json({ error: "PAYWALL_ACTIVE" }, { status: 403 })
         }
 
@@ -105,12 +106,14 @@ export async function POST(req: NextRequest) {
              throw new Error("Gemini ha restituito un Body di solo formato o bloccato dai filtri.")
         }
 
-        // SCALA IL CREDITO
-        await client.users.updateUserMetadata(userId, {
-            privateMetadata: {
-                api_calls: currentCalls + 1
-            }
-        });
+        // SCALA IL CREDITO SOLO SE NON PREMIUM
+        if (!isPremium) {
+            await client.users.updateUserMetadata(userId, {
+                privateMetadata: {
+                    api_calls: currentCalls + 1
+                }
+            });
+        }
 
         return NextResponse.json({ text: responseText })
 
