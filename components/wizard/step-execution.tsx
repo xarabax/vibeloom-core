@@ -6,6 +6,8 @@ import { CheckCircle, Download, FileJson, Play, Loader2, Target, ShieldAlert, Cp
 import { generateExecutiveBoardPDF } from "@/lib/services/pdf-generator"
 import { downloadBlueprintJSON, BlueprintSchema } from "@/lib/services/blueprint-generator"
 
+import { PaywallModal } from "./paywall-modal"
+
 interface StepExecutionProps {
     goal: string
     scenario: any
@@ -16,18 +18,19 @@ export function StepExecution({ goal, scenario, onReset }: StepExecutionProps) {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false)
     const [isGeneratingJSON, setIsGeneratingJSON] = useState(false)
 
+    const [isPaywallOpen, setIsPaywallOpen] = useState(false)
+
     // Formattazione data odierna
     const todayDate = new Date().toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })
 
     const handleDownloadPDF = async () => {
         setIsGeneratingPDF(true)
-        try {
-            await generateExecutiveBoardPDF("pdf-template-container", "VibeLoom-Verbale-Esecutivo.pdf")
-        } catch (error) {
-            console.error(error)
-        } finally {
-            setTimeout(() => setIsGeneratingPDF(false), 800)
-        }
+        
+        // Trigger Paywall per la risorsa Premium (PDF McKinsey)
+        setTimeout(() => {
+            setIsGeneratingPDF(false)
+            setIsPaywallOpen(true)
+        }, 800)
     }
 
     const handleDownloadJSON = () => {
@@ -236,6 +239,8 @@ export function StepExecution({ goal, scenario, onReset }: StepExecutionProps) {
                     ← Esegui una Nuova Discovery
                 </Button>
             </div>
+            
+            <PaywallModal open={isPaywallOpen} onOpenChange={setIsPaywallOpen} />
         </div>
     )
 }
