@@ -27,7 +27,7 @@ export default function RootLayout({
         <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
           {children}
           <div className="fixed top-4 left-4 z-50 pointer-events-none opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg">
-            <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[123px] md:w-[155px] h-auto" />
+            <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[123px] md:w-[155px] h-auto mix-blend-screen" />
           </div>
           <Analytics />
           <Toaster />
