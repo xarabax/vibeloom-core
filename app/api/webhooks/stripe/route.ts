@@ -2,13 +2,14 @@ import { NextResponse } from "next/server"
 import { clerkClient } from "@clerk/nextjs/server"
 import Stripe from "stripe"
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "sk_test_...", {
-    apiVersion: "2024-04-10" as any // Use standard API version
-})
-
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ""
+export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+        apiVersion: "2024-04-10" as any
+    })
+    
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ""
     const payload = await req.text()
     const signature = req.headers.get("Stripe-Signature") as string
 
