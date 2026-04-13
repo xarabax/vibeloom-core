@@ -29,8 +29,8 @@ export default function RootLayout({
       <html lang="it" className="dark" suppressHydrationWarning>
         <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
           {children}
-          <a href="https://ergo-sum.tv" className="fixed top-4 left-4 z-50 opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg">
-            <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[123px] md:w-[155px] h-auto mix-blend-screen" />
+          <a href="https://ergo-sum.tv" target="_blank" className="fixed top-4 right-16 z-50 opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg flex items-center gap-2">
+            <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[110px] md:w-[130px] h-auto mix-blend-screen" />
           </a>
           <Analytics />
           <Toaster />
