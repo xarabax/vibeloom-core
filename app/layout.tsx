@@ -13,7 +13,10 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
 export const metadata: Metadata = {
   title: "VibeLoom — Decision & Adoption Engine",
   description: "Trasforma l'incertezza sull'integrazione AI in decisioni aziendali difendibili.",
-  generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: '/favicon.svg',
+  }
 }
 
 export default function RootLayout({
@@ -26,9 +29,9 @@ export default function RootLayout({
       <html lang="it" className="dark" suppressHydrationWarning>
         <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
           {children}
-          <div className="fixed top-4 left-4 z-50 pointer-events-none opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg">
+          <a href="https://ergo-sum.tv" className="fixed top-4 left-4 z-50 opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg">
             <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[123px] md:w-[155px] h-auto mix-blend-screen" />
-          </div>
+          </a>
           <Analytics />
           <Toaster />
         </body>

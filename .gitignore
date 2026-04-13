@@ -9,3 +9,4 @@ node_modules
 # clerk configuration (can include secrets)
 /.clerk/
 node.pkg
+.env*.local
