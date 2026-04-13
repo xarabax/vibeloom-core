@@ -328,15 +328,15 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
     }
 
     return (
-        <div className="flex flex-col h-[88vh] max-w-5xl mx-auto border border-border rounded-xl overflow-hidden bg-card/30 animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
+        <div className="flex flex-col h-[calc(100vh-4px)] mt-1 max-w-5xl mx-auto border border-border rounded-xl rounded-b-[4px] overflow-hidden bg-card/30 animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
             {/* Header Chat */}
             <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
                 <div>
                     <h2 className="font-bold text-lg">{mode === 'preset' ? 'Audit Aziendale in corso' : 'Sessione Board Custom'}</h2>
                     <p className="text-sm text-muted-foreground line-clamp-1">{mode === 'preset' ? `Focus: ${presetType.toUpperCase()}` : `Obiettivo: ${goal}`}</p>
                 </div>
-                <div className="flex flex-col items-end gap-1.5">
-                    <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-1">Board Tecnico Attivo</p>
+                <div className="flex items-center gap-3">
+                    <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-0 whitespace-nowrap">Advisor attivi</p>
                     <div className="flex gap-2 flex-wrap justify-end">
                         {selectedAdvisors.map(id => {
                             const adv = getAdvisorById(id)
@@ -430,7 +430,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             )}
 
             {/* Input Area */}
-            <div className="p-4 bg-background border-t border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all">
+            <div className="p-4 bg-background border-t border-border focus-within:ring-2 focus-within:ring-primary/50 transition-all mb-0">
                 <div className="flex items-center space-x-2">
                     <input 
                         type="file" 

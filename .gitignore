@@ -5,3 +5,7 @@ node_modules
 .DS_Store
 .vercel
 .env.local
+
+# clerk configuration (can include secrets)
+/.clerk/
+node.pkg

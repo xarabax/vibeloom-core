@@ -14,6 +14,20 @@ export function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
 
     if (!open) return null;
 
+    const handleCheckout = async () => {
+        try {
+            const res = await fetch("/api/checkout", { method: "POST" })
+            const data = await res.json()
+            if (data.url) {
+                window.location.href = data.url
+            } else {
+                throw new Error(data.error || "Errore durante il checkout.")
+            }
+        } catch (err) {
+            alert("Impossibile avviare il pagamento: " + err)
+        }
+    }
+
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <div className="relative w-full max-w-md bg-stone-900 border border-stone-800 text-stone-100 overflow-hidden shadow-2xl rounded-2xl animate-in zoom-in-95 duration-300 m-4">
@@ -46,7 +60,7 @@ export function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
                         <Button 
                             size="lg" 
                             className="w-full font-semibold shadow-lg shadow-primary/20 group h-12"
-                            onClick={() => window.open(`https://buy.stripe.com/test_fZu8wP1qIb4QcWmbyod7q00${userId ? `?client_reference_id=${userId}` : ''}`, '_blank')}
+                            onClick={handleCheckout}
                         >
                             Sblocca Ora
                             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
@@ -55,6 +69,7 @@ export function PaywallModal({ open, onOpenChange }: PaywallModalProps) {
                         <p className="text-[10px] text-center text-stone-500 mt-1 uppercase tracking-tighter">
                             Hai bisogno di un piano Enterprise? <a href="mailto:info@ergo-sum.tv" className="text-primary hover:underline">Contattaci</a>
                         </p>
+
 
                         <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="w-full text-stone-500 hover:text-stone-300 mt-2">
                             Annulla e Torna Indietro

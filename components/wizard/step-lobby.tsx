@@ -102,7 +102,7 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                     Scopri dove l'AI può creare <span className="text-primary">impatto nella tua attività.</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto">
-                    Dimmi cosa fai o allega i dati della tua azienda. Il motore VibeLoom genererà per te 3 opportunità concrete di automazione o crescita, prima di investirci tempo e soldi.
+                    Dimmi cosa fai o allega i dati della tua azienda. Il motore AI-ergo-sum genererà per te 3 opportunità concrete di automazione o crescita, prima di investirci tempo e soldi.
                 </p>
             </div>
 
@@ -123,9 +123,31 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                     onChange={(e) => setText(e.target.value)}
                 />
 
+                {/* PROMPT EXAMPLES */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                    {[
+                        { label: "Operativo", text: "[Inserisci dipartimento o processo]. Analizza i colli di bottiglia e proponi automazioni per risparmiare tempo usando [i tuoi software]." },
+                        { label: "Strategico", text: "[Il mio settore è...]. Identifica bandi, incentivi o agevolazioni fiscali a cui posso accedere. Fatturato annuo circa [Inserisci cifra]." },
+                        { label: "Marketing", text: "Disegna un workflow automatizzato per gestire i lead provenienti da [Canale, es: Email] e inserirli in [Nome del tuo CRM, es: HubSpot]." }
+                    ].map((example, i) => (
+                        <button 
+                            key={i}
+                            onClick={() => setText(example.text)}
+                            className="text-left p-3 rounded-xl bg-muted/20 border border-border/50 hover:border-primary/40 hover:bg-muted/40 transition-all group"
+                        >
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-primary/70 mb-1 block group-hover:text-primary transition-colors">
+                                {example.label}
+                            </span>
+                            <p className="text-xs text-muted-foreground line-clamp-2 leading-snug font-medium italic">
+                                "{example.text}"
+                            </p>
+                        </button>
+                    ))}
+                </div>
+
                 {/* ATTACHMENT PILL (se allegato caricato) */}
                 {fileName && !error && (
-                    <div className="flex items-center gap-2 bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-xl w-max mt-4 animate-in zoom-in-95">
+                    <div className="flex items-center gap-2 bg-primary/10 text-primary border border-primary/20 px-4 py-2 rounded-xl w-max mt-6 animate-in zoom-in-95">
                         <FileText className="w-4 h-4" />
                         <span className="text-sm font-semibold truncate max-w-[200px]">{fileName}</span>
                     </div>

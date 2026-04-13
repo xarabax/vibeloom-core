@@ -130,8 +130,8 @@ export type AIRole = AdvisorId
 export const ADVISORS: AdvisorConfig[] = [
     {
         id: "sniper",
-        title: "The Sniper",
-        role: "Efficienza Radicale",
+        title: "Sniper",
+        role: "Efficienza",
         description: "Odio la complessità. Il mio compito è tagliare tutto ciò che non è essenziale per l'MVP. Se non serve a fatturare subito, per me è no.",
         iconName: "Crosshair",
         colorClasses: "bg-stone-800 border-stone-600 text-stone-100",
@@ -139,8 +139,8 @@ export const ADVISORS: AdvisorConfig[] = [
     },
     {
         id: "vc",
-        title: "The VC",
-        role: "Scalabilità & Exit",
+        title: "VC",
+        role: "Scalabilità",
         description: "Cerco l'Unicorno. Se la tua idea è copiabile o ha margini bassi, la distruggerò. Voglio vedere il vantaggio sleale (Moat) e il x100.",
         iconName: "TrendingUp",
         colorClasses: "bg-emerald-950 border-emerald-800 text-emerald-100",
@@ -148,8 +148,8 @@ export const ADVISORS: AdvisorConfig[] = [
     },
     {
         id: "guardian",
-        title: "The Guardian",
-        role: "Risk & Compliance",
+        title: "Guardian",
+        role: "Rischio & Compliance",
         description: "Vedo problemi ovunque. Faccio il pre-mortem del tuo progetto: GDPR, sicurezza, costi nascosti e lock-in. Ti salvo dal disastro.",
         iconName: "ShieldAlert",
         colorClasses: "bg-blue-950 border-blue-900 text-blue-100",
@@ -157,8 +157,8 @@ export const ADVISORS: AdvisorConfig[] = [
     },
     {
         id: "mentor",
-        title: "The Mentor",
-        role: "Sintesi Strategica",
+        title: "Mentor",
+        role: "Visione Strategica",
         description: "Guardo il quadro d'insieme. Bilancio le critiche feroci degli altri per trovare la strada sostenibile a lungo termine.",
         iconName: "Scale",
         colorClasses: "bg-purple-950 border-purple-900 text-purple-100",
