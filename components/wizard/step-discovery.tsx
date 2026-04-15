@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Loader2, Target, MoveRight, Layers, AlertCircle, Zap, Crosshair } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/LanguageContext"
+import { PaywallModal } from "./paywall-modal"
 
 export interface DiscoveryOpportunity {
     title: string
@@ -22,9 +24,8 @@ interface StepDiscoveryProps {
     onBack: () => void
 }
 
-import { PaywallModal } from "./paywall-modal"
-
 export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscoveryProps) {
+    const { t, language } = useLanguage()
     const [opportunities, setOpportunities] = useState<DiscoveryOpportunity[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [error, setError] = useState<string | null>(null)
@@ -37,10 +38,12 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
 
         const runDiscovery = async () => {
             try {
+                // Pass language along with input
+                const payload = { ...input, language }
                 const res = await fetch("/api/discovery", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(input)
+                    body: JSON.stringify(payload)
                 })
 
                 if (res.status === 403) {
@@ -68,7 +71,7 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
         }
 
         runDiscovery()
-    }, [input])
+    }, [input, language])
 
     return (
         <div className="flex flex-col items-center justify-start min-h-[70vh] max-w-7xl mx-auto p-4 md:p-6 space-y-8 animate-in fade-in zoom-in-95 duration-700 pb-20">
@@ -76,13 +79,13 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
             {/* Header */}
             <div className="text-center space-y-4 w-full max-w-3xl mx-auto mt-6">
                 <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-bold uppercase tracking-wider mb-2">
-                    Diagnostica VibeLoom
+                    {t.discovery.tag}
                 </div>
                 <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground">
-                    Actionable Workflow Engine
+                    {t.discovery.title}
                 </h1>
                 <p className="text-lg text-muted-foreground">
-                    Sulla base dei tuoi processi, abbiamo strutturato **3 stack operativi AI** immediatamente applicabili per ottimizzare margini e tempi.
+                    {t.discovery.subtitle}
                 </p>
             </div>
 
@@ -96,8 +99,8 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
             {isLoading && (
                 <div className="flex flex-col items-center justify-center min-h-[400px] w-full bg-card/10 rounded-3xl border border-dashed border-border/50">
                     <Loader2 className="w-16 h-16 animate-spin text-primary mb-6" />
-                    <h3 className="text-2xl font-bold text-foreground mb-2">Ingegnerizzazione stack in corso...</h3>
-                    <p className="text-muted-foreground animate-pulse">L'AI sta incrociando i tuoi dati con le architetture SaaS e RAG più efficaci.</p>
+                    <h3 className="text-2xl font-bold text-foreground mb-2">{t.discovery.loadingTitle}</h3>
+                    <p className="text-muted-foreground animate-pulse">{t.discovery.loadingSub}</p>
                 </div>
             )}
 
@@ -119,19 +122,19 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                                     <h3 className="text-2xl md:text-3xl font-extrabold mb-3 group-hover:text-primary transition-colors">{opp.title}</h3>
                                     
                                     <p className="text-foreground/80 md:text-lg mb-6 leading-relaxed">
-                                        <span className="font-semibold text-foreground">Gap Operativo:</span> {opp.why_it_matters}
+                                        <span className="font-semibold text-foreground">{t.discovery.eval_gap}</span> {opp.why_it_matters}
                                     </p>
                                 </div>
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 pt-6 border-t border-border/40">
                                     <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Impatto Economico</p>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">{t.discovery.eval_impact}</p>
                                         <p className="text-xl md:text-2xl font-extrabold flex items-center text-primary"><Target className="w-6 h-6 mr-2 text-primary/70"/> {opp.economic_impact}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Priorità d'Azione</p>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">{t.discovery.eval_priority}</p>
                                         <p className={`text-lg font-bold flex items-center pt-1
-                                            ${opp.urgency?.toLowerCase().includes('alta') ? 'text-red-500' :
+                                            ${opp.urgency?.toLowerCase().includes('alta') || opp.urgency?.toLowerCase().includes('high') ? 'text-red-500' :
                                               opp.urgency?.toLowerCase().includes('medi') ? 'text-yellow-500' : 'text-green-500'}
                                         `}>
                                             <AlertCircle className="w-5 h-5 mr-1.5" /> {opp.urgency}
@@ -139,7 +142,7 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                                         <p className="text-xs text-muted-foreground mt-1.5 leading-tight">{opp.urgency_rationale}</p>
                                     </div>
                                     <div>
-                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">Tempo Stimato</p>
+                                        <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider mb-2">{t.discovery.eval_time}</p>
                                         <p className="text-lg font-medium flex items-center pt-1"><Zap className="w-4 h-4 mr-2 text-stone-500"/> {opp.estimated_time}</p>
                                     </div>
                                 </div>
@@ -148,7 +151,7 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                             {/* Right Side: The Stack & Handoff */}
                             <div className="w-full lg:w-[420px] bg-muted/30 p-6 md:p-8 flex flex-col border-l border-border/40">
                                 <h4 className="font-bold mb-5 uppercase text-xs tracking-widest text-muted-foreground flex items-center">
-                                    <Layers className="w-4 h-4 mr-2"/> Stack Tecnologico
+                                    <Layers className="w-4 h-4 mr-2"/> {t.discovery.eval_stack}
                                 </h4>
                                 
                                 <div className="space-y-6 flex-1">
@@ -165,7 +168,7 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                                     
                                     {/* Workflow Monospace Block */}
                                     <div>
-                                        <p className="text-xs text-muted-foreground mb-2 font-bold uppercase tracking-wider">Workflow</p>
+                                        <p className="text-xs text-muted-foreground mb-2 font-bold uppercase tracking-wider">{t.discovery.eval_workflow}</p>
                                         <div className="bg-background/80 p-3 rounded-lg border border-border text-sm font-mono text-primary/90 leading-relaxed break-words shadow-inner">
                                             {opp.workflow}
                                         </div>
@@ -178,10 +181,10 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
                                         onClick={() => onSelectOpportunity(opp)}
                                         className="w-full h-14 text-base font-bold shadow-md hover:scale-105 transition-transform"
                                     >
-                                        Porta nel Board Tecnico <MoveRight className="w-5 h-5 ml-2" />
+                                        {t.discovery.btn_board} <MoveRight className="w-5 h-5 ml-2" />
                                     </Button>
                                     <p className="text-xs text-center text-muted-foreground mt-3 leading-tight">
-                                        Approfondisci i costi API, le criticità e i dettagli di implementazione con l'Advisor.
+                                        {t.discovery.btn_board_sub}
                                     </p>
                                 </div>
                             </div>
@@ -195,7 +198,7 @@ export function StepDiscovery({ input, onSelectOpportunity, onBack }: StepDiscov
             {!isLoading && (
                 <div className="flex w-full pt-4">
                     <Button variant="ghost" onClick={onBack} className="h-12 hover:bg-muted">
-                        <ArrowLeft className="w-4 h-4 mr-2" /> Nuova Discovery
+                        <ArrowLeft className="w-4 h-4 mr-2" /> {t.discovery.btn_back}
                     </Button>
                 </div>
             )}

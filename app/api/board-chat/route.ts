@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         }
 
         const body = await req.json()
-        const { messages, goal, presetType } = body
+        const { messages, goal, presetType, language } = body
 
         if (!messages || !Array.isArray(messages) || messages.length === 0) {
             return NextResponse.json({ error: "Nessun messaggio fornito" }, { status: 400 })
@@ -44,20 +44,23 @@ export async function POST(req: NextRequest) {
         // Costruzione del System Prompt
         let systemInstruction = `Sei un Board of AI Advisors altamente tecnico (CTO, Automation Engineers, AI Solution Architects).\nObiettivo della sessione utente: ${goal}\n\n`
         
+        const langRule = language === 'en' ? "ALWAYS respond in English." : "Rispondi SEMPRE in italiano."
+
         if (presetType === "marketing") {
             systemInstruction += AUDIT_PROMPTS.marketing
-            systemInstruction += "\nRegole d'oro: Rispondi SEMPRE in italiano. Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico."
+            systemInstruction += `\nRegole d'oro: ${langRule} Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico.`
         }
         else if (presetType === "tech") {
             systemInstruction += AUDIT_PROMPTS.tech
-            systemInstruction += "\nRegole d'oro: Rispondi SEMPRE in italiano. Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico."
+            systemInstruction += `\nRegole d'oro: ${langRule} Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico.`
         }
         else if (presetType === "finance") {
             systemInstruction += AUDIT_PROMPTS.finance
-            systemInstruction += "\nRegole d'oro: Rispondi SEMPRE in italiano. Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico."
+            systemInstruction += `\nRegole d'oro: ${langRule} Genera sempre un PIANO OPERATIVO CHIARO a step (Fase 1, Fase 2, Fase 3...). Sii didattico.`
         }
         else {
             systemInstruction += AUDIT_PROMPTS.wizard
+            systemInstruction += `\nRegole d'oro: ${langRule}`
         }
 
         const model = genAI.getGenerativeModel({ 

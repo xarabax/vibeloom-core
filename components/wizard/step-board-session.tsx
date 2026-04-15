@@ -7,6 +7,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { AdvisorId, getAdvisorById } from "@/lib/types/decision-mate"
 import { Send, Paperclip, CheckCircle2, FileText, ArrowRight, Loader2 } from "lucide-react"
 import { PaywallModal } from "./paywall-modal"
+import { useLanguage } from "@/lib/i18n/LanguageContext"
 
 interface Message {
     id: string
@@ -108,6 +109,7 @@ interface StepBoardSessionProps {
 }
 
 export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: StepBoardSessionProps) {
+    const { t, language } = useLanguage()
     const fileInputRef = useRef<HTMLInputElement>(null)
     const scrollAreaRef = useRef<HTMLDivElement>(null)
 
@@ -119,13 +121,11 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
     const hasInitialized = useRef(false)
 
-    // Determine the preset persona based on goal
     let presetType = "custom"
     if (goal.includes("vendite") || goal.includes("ricavi")) presetType = "marketing"
     if (goal.includes("costi") || goal.includes("efficienza") || goal.includes("automati")) presetType = "tech"
     if (goal.includes("cassa") || goal.includes("rischi") || goal.includes("bandi")) presetType = "finance"
 
-    // Initialize Chat
     useEffect(() => {
         if (messages.length === 0 && !hasInitialized.current) {
             hasInitialized.current = true
@@ -136,12 +136,10 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                     { id: "2", sender: selectedAdvisors[0] || "mentor", text: "Benvenuto nella stanza. Per fare un'analisi seria, dimmi di più sul problema oppure usa la graffetta in basso per caricare un bilancio, una lista costi o un documento aziendale da cui partire.", timestamp: new Date() }
                 ])
             } else {
-                // In Custom mode, the "goal" is exactly the first user prompt!
-                // We add it to state, and immediately trigger the AI response in background.
                 const userMsg: Message = {
                     id: Date.now().toString(),
                     sender: "user",
-                    text: goal, // "Devo creare un programma che estrae dati da pdf..."
+                    text: goal,
                     timestamp: new Date()
                 }
                 setMessages([userMsg])
@@ -158,10 +156,11 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    messages: [firstMessage], // Inviamo subito il problema utente
+                    messages: [firstMessage],
                     goal: firstMessage.text,
                     presetType: "custom",
-                    selectedAdvisors
+                    selectedAdvisors,
+                    language
                 })
             })
 
@@ -196,7 +195,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
         }
     }
 
-    // Auto-scroll to bottom
     useEffect(() => {
         if (scrollAreaRef.current) {
             const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]')
@@ -211,7 +209,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
         const currentHistory = [...messages]
 
-        // Add user message to UI
         if (!isHiddenContext) {
             const newUserMsg: Message = {
                 id: Date.now().toString(),
@@ -228,7 +225,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
         try {
             const payloadHistory = currentHistory.filter(m => m.sender !== "system")
-            // Ensure the AI gets the context
             if (isHiddenContext) {
                 payloadHistory.push({
                     id: "hidden-context",
@@ -245,7 +241,8 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                     messages: payloadHistory,
                     goal,
                     presetType,
-                    selectedAdvisors
+                    selectedAdvisors,
+                    language
                 })
             })
 
@@ -302,7 +299,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
             if (!res.ok) throw new Error(data.error || "Errore upload")
 
-            // Aggiungiamo un messaggio visivo per l'utente
             const fileMsg: Message = {
                 id: Date.now().toString(),
                 sender: "user",
@@ -312,8 +308,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             }
             setMessages(prev => [...prev, fileMsg])
 
-            // Mandiamo in backgound il testo puro all'AI, facendolo figurare come un prompt utente "nascosto"
-            // così l'AI reagisce immediatamente al contenuto del documento.
             const hiddenContext = `Ho appena caricato un documento aziendale intitolato "${file.name}". Contenuto estratto:\n\n${data.text}\n\nAnalizza silenziosamente questi dati alla luce del nostro obiettivo. Dimmi cosa noti di allarmante o le prime deduzioni immediate.`
             
             await handleSendMessage(hiddenContext, true)
@@ -322,7 +316,6 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             alert("Errore durante l'elaborazione del file: " + error)
         } finally {
             setIsUploading(false)
-            // Reset input per permettere di ricaricare lo stesso file
             if (fileInputRef.current) fileInputRef.current.value = ""
         }
     }
@@ -330,14 +323,15 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
     return (
         <div className="flex flex-col h-[calc(100vh-4px)] mt-1 max-w-5xl mx-auto border border-border rounded-xl rounded-b-[4px] overflow-hidden bg-card/30 animate-in fade-in zoom-in-95 duration-500 shadow-2xl">
             {/* Header Chat */}
-            <div className="bg-muted/50 p-4 border-b border-border flex items-center justify-between">
-                <div>
-                    <h2 className="font-bold text-lg">{mode === 'preset' ? 'Audit Aziendale in corso' : 'Sessione Board Custom'}</h2>
-                    <p className="text-sm text-muted-foreground line-clamp-1">{mode === 'preset' ? `Focus: ${presetType.toUpperCase()}` : `Obiettivo: ${goal}`}</p>
+            <div className="bg-muted/50 p-4 border-b border-border flex items-start justify-between">
+                <div className="flex-1 mr-4 mt-1">
+                    <p className="text-sm font-medium text-muted-foreground leading-snug break-words">
+                        {mode === 'preset' ? `${t.board.focus} ${presetType.toUpperCase()}` : goal.replace(/^Obiettivo:\s*/i, '')}
+                    </p>
                 </div>
-                <div className="flex items-center gap-3">
-                    <p className="text-[10px] text-muted-foreground font-bold tracking-widest uppercase mb-0 whitespace-nowrap">Advisor attivi</p>
-                    <div className="flex gap-2 flex-wrap justify-end">
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                    <p className="text-[9px] text-muted-foreground font-bold tracking-widest uppercase mb-0">{t.board.active_advisors}</p>
+                    <div className="flex flex-col gap-1.5 items-end">
                         {selectedAdvisors.map(id => {
                             const adv = getAdvisorById(id)
                             return adv ? (
@@ -412,7 +406,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                             </div>
                             <div className="bg-stone-800/50 text-muted-foreground rounded-2xl p-4 flex items-center space-x-2 border border-stone-700/50">
                                 <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                                <span className="text-sm font-medium animate-pulse">L'Advisor sta elaborando...</span>
+                                <span className="text-sm font-medium animate-pulse">{t.board.loading}</span>
                             </div>
                         </div>
                     )}
@@ -422,9 +416,9 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             {/* Action Bar (Chiudi sessione) */}
             {messages.length > 5 && !isLoading && (
                 <div className="bg-primary/5 p-4 text-center border-t border-primary/10 animate-in slide-in-from-bottom-2">
-                    <p className="text-sm text-foreground/80 font-medium mb-3">L'analisi sembra arrivata a un punto di svolta.</p>
+                    <p className="text-sm text-foreground/80 font-medium mb-3">{t.board.next_text}</p>
                     <Button onClick={() => onComplete(messages)} size="lg" className="w-full sm:w-auto shadow-lg shadow-primary/20">
-                        Genera Mappa Scenari <ArrowRight className="w-5 h-5 ml-2" />
+                        {t.board.btn_next} <ArrowRight className="w-5 h-5 ml-2" />
                     </Button>
                 </div>
             )}
@@ -443,7 +437,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                         variant="outline" 
                         size="icon" 
                         className="h-12 w-12 rounded-full flex-shrink-0 text-muted-foreground hover:text-primary hover:bg-primary/10 border-muted"
-                        title="Carica un documento (PDF, Excel, Word)"
+                        title={t.board.attach_title}
                         onClick={() => fileInputRef.current?.click()}
                         disabled={isLoading || isUploading}
                     >
@@ -453,7 +447,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                         value={inputValue}
                         onChange={(e) => setInputValue(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && !isLoading && handleSendMessage()}
-                        placeholder="Rispondi al Board o fai una domanda provocatoria..."
+                        placeholder={t.board.placeholder}
                         className="flex-1 h-12 text-base px-6 rounded-full border-muted bg-muted/30 focus-visible:ring-0 focus-visible:ring-offset-0 border shadow-inner"
                         disabled={isLoading || isUploading}
                     />

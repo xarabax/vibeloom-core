@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   }
 }
 
+import { LanguageProvider } from '@/lib/i18n/LanguageContext'
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -28,12 +30,14 @@ export default function RootLayout({
     <ClerkProvider localization={itIT}>
       <html lang="it" className="dark" suppressHydrationWarning>
         <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
-          {children}
-          <a href="https://ergo-sum.tv" target="_blank" className="fixed top-4 right-16 z-50 opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg flex items-center gap-2">
-            <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[110px] md:w-[130px] h-auto mix-blend-screen" />
-          </a>
-          <Analytics />
-          <Toaster />
+          <LanguageProvider>
+            {children}
+            <a href="https://ergo-sum.tv" target="_blank" className="fixed top-4 left-6 z-50 opacity-80 hover:opacity-100 transition-opacity drop-shadow-lg flex items-center gap-2">
+              <img src="/ergo-sum-logo.png" alt="Ergo Sum" className="w-[105px] md:w-[125px] h-auto mix-blend-screen" />
+            </a>
+            <Analytics />
+            <Toaster />
+          </LanguageProvider>
         </body>
       </html>
     </ClerkProvider>

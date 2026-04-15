@@ -5,12 +5,14 @@ import { useAuth, useClerk } from "@clerk/nextjs"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Paperclip, Loader2, PlayCircle, FileText } from "lucide-react"
+import { useLanguage } from "@/lib/i18n/LanguageContext"
 
 interface StepLobbyProps {
     onSubmit: (text: string, fileText: string, fileName: string) => void
 }
 
 export function StepLobby({ onSubmit }: StepLobbyProps) {
+    const { t } = useLanguage()
     const [text, setText] = useState("")
     const [fileName, setFileName] = useState("")
     const [fileText, setFileText] = useState("")
@@ -75,7 +77,7 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
 
     const handleSubmit = () => {
         if (!text.trim() && !fileText) {
-            setError("Scrivi qualcosa o allega un documento per iniziare l'analisi.")
+            setError(t.lobby.err_empty)
             return
         }
 
@@ -99,10 +101,10 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
             {/* INTESTAZIONE WEDGE */}
             <div className="text-center space-y-4 mb-10">
                 <h1 className="text-5xl md:text-6xl font-extrabold tracking-tighter text-foreground leading-tight">
-                    Scopri dove l'AI può creare <span className="text-primary">impatto nella tua attività.</span>
+                    {t.lobby.titleHigh1} <span className="text-primary">{t.lobby.titleHigh2}</span>
                 </h1>
                 <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-2xl mx-auto">
-                    Dimmi cosa fai o allega i dati della tua azienda. Il motore AI-ergo-sum genererà per te 3 opportunità concrete di automazione o crescita, prima di investirci tempo e soldi.
+                    {t.lobby.subtitle}
                 </p>
             </div>
 
@@ -111,13 +113,13 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                 
                 {/* SUGGERIMENTI / GUIDANCE */}
                 <div className="flex flex-wrap items-center gap-2 mb-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                    <span className="bg-muted px-2 py-1 rounded-md">Es. business plan (PDF)</span>
-                    <span className="bg-muted px-2 py-1 rounded-md">Es. lista costi (Excel)</span>
-                    <span className="bg-muted px-2 py-1 rounded-md">Es. mansionario / organigramma</span>
+                    <span className="bg-muted px-2 py-1 rounded-md">{t.lobby.sug_plan}</span>
+                    <span className="bg-muted px-2 py-1 rounded-md">{t.lobby.sug_costs}</span>
+                    <span className="bg-muted px-2 py-1 rounded-md">{t.lobby.sug_org}</span>
                 </div>
 
                 <Textarea 
-                    placeholder="Descrivi la tua azienda, il tuo dipartimento o il processo operativo che ti ruba più tempo... oppure semplicemente clicca la graffetta per allegare i dati."
+                    placeholder={t.lobby.placeholder}
                     className="min-h-[160px] resize-none text-base md:text-lg bg-transparent border-0 focus-visible:ring-0 p-0 shadow-none leading-relaxed"
                     value={text}
                     onChange={(e) => setText(e.target.value)}
@@ -126,9 +128,9 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                 {/* PROMPT EXAMPLES */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
                     {[
-                        { label: "Operativo", text: "[Inserisci dipartimento o processo]. Analizza i colli di bottiglia e proponi automazioni per risparmiare tempo usando [i tuoi software]." },
-                        { label: "Strategico", text: "[Il mio settore è...]. Identifica bandi, incentivi o agevolazioni fiscali a cui posso accedere. Fatturato annuo circa [Inserisci cifra]." },
-                        { label: "Marketing", text: "Disegna un workflow automatizzato per gestire i lead provenienti da [Canale, es: Email] e inserirli in [Nome del tuo CRM, es: HubSpot]." }
+                        { label: t.lobby.prompt1_label, text: t.lobby.prompt1_text },
+                        { label: t.lobby.prompt2_label, text: t.lobby.prompt2_text },
+                        { label: t.lobby.prompt3_label, text: t.lobby.prompt3_text }
                     ].map((example, i) => (
                         <button 
                             key={i}
@@ -177,9 +179,9 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                             disabled={isUploading}
                         >
                             {isUploading ? (
-                                <><Loader2 className="w-5 h-5 mr-3 animate-spin"/> Elaborazione...</>
+                                <><Loader2 className="w-5 h-5 mr-3 animate-spin"/> {t.lobby.btn_processing}</>
                             ) : (
-                                <><Paperclip className="w-5 h-5 mr-3"/> Allega Dati Reali</>
+                                <><Paperclip className="w-5 h-5 mr-3"/> {t.lobby.btn_attach}</>
                             )}
                         </Button>
                     </div>
@@ -191,7 +193,7 @@ export function StepLobby({ onSubmit }: StepLobbyProps) {
                         onClick={handleSubmit}
                         disabled={isUploading}
                     >
-                        Inizia la Discovery <PlayCircle className="w-6 h-6 ml-3" />
+                        {t.lobby.btn_start} <PlayCircle className="w-6 h-6 ml-3" />
                     </Button>
                 </div>
 

@@ -50,7 +50,7 @@ export async function POST(req: Request) {
         }
 
         const body = await req.json()
-        const { text, fileText, fileName } = body
+        const { text, fileText, fileName, language } = body
 
         if (!text && !fileText) {
             return NextResponse.json({ error: "Dati non forniti" }, { status: 400 })
@@ -65,7 +65,10 @@ export async function POST(req: Request) {
             }
         })
 
+        const promptLanguage = language === 'en' ? "IMPORTANT: You MUST write the JSON values (title, area, rationale, workflow, etc) entirely in ENGLISH." : "Rispondi in italiano."
+        
         const prompt = `Analizza l'operatività dell'utente ed estrai 3 diagnosi in stile "Decision Engine".
+${promptLanguage}
         
 TESTO UTENTE:
 ${text || "Nessun testo esplicito."}
