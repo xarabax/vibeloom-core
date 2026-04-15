@@ -5,6 +5,14 @@ import { analyzeRequestSchema, fileSchema } from "@/lib/validations/analyze"
 import { getCachedAnalysis, setCachedAnalysis } from "@/lib/cache"
 import type { ContextData } from "@/lib/types/decision-mate"
 
+// serverExternalPackages in next.config.mjs garantisce che questi girino lato server
+// pdf-parse e mammoth sono CJS puri — require a livello di modulo (non dentro loop)
+/* eslint-disable @typescript-eslint/no-require-imports */
+const pdfParse = require("pdf-parse") as (buffer: Buffer) => Promise<{ text: string }>
+const mammoth = require("mammoth") as { extractRawText: (opts: { buffer: Buffer }) => Promise<{ value: string }> }
+/* eslint-enable @typescript-eslint/no-require-imports */
+import * as XLSX from "xlsx"
+
 // Timeout per la chiamata AI (90 secondi - aumentato per analisi più complesse)
 const AI_TIMEOUT_MS = 90000
 
@@ -92,10 +100,8 @@ export async function POST(req: Request) {
             // PDF
             if (file.type === "application/pdf") {
                 try {
-                    const pdf = require("pdf-parse")
-                    const data = await pdf(buffer)
+                    const data = await pdfParse(buffer)
                     textContent = data.text
-                    console.log(`[API] Parsed PDF: ${file.name} (${textContent.length} chars)`)
                 } catch (e) {
                     console.error(`[API] PDF parse error for ${file.name}:`, e)
                     return NextResponse.json(
@@ -107,10 +113,8 @@ export async function POST(req: Request) {
             // DOCX
             else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
                 try {
-                    const mammoth = require("mammoth")
                     const result = await mammoth.extractRawText({ buffer })
                     textContent = result.value
-                    console.log(`[API] Parsed DOCX: ${file.name} (${textContent.length} chars)`)
                 } catch (e) {
                     console.error(`[API] DOCX parse error for ${file.name}:`, e)
                     return NextResponse.json(
@@ -126,7 +130,6 @@ export async function POST(req: Request) {
                 file.type === "text/csv"
             ) {
                 try {
-                    const XLSX = require("xlsx")
                     const workbook = XLSX.read(buffer, { type: "buffer" })
                     textContent = workbook.SheetNames
                         .map((sheetName: string) => {
@@ -134,7 +137,6 @@ export async function POST(req: Request) {
                             return `[Sheet: ${sheetName}]\n${XLSX.utils.sheet_to_csv(sheet)}`
                         })
                         .join("\n\n")
-                    console.log(`[API] Parsed Excel/CSV: ${file.name} (${textContent.length} chars)`)
                 } catch (e) {
                     console.error(`[API] Excel/CSV parse error for ${file.name}:`, e)
                     return NextResponse.json(

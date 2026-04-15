@@ -1,11 +1,10 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
 import { NextResponse } from "next/server"
 import { auth, clerkClient } from "@clerk/nextjs/server"
+import { rateLimit } from "@/lib/rate-limit"
 
 export const maxDuration = 60
 export const preferredRegion = 'iad1' // Force US execution to avoid EU 403 blocks on GCP Free Tier
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "")
 
 const MAX_FREE_CALLS = 4;
 
@@ -33,6 +32,13 @@ const discoverySchema = {
 }
 
 export async function POST(req: Request) {
+    // === RATE LIMITING ===
+    const ip = req.headers.get("x-forwarded-for") || "unknown"
+    const limitResult = rateLimit(ip)
+    if (limitResult && "success" in limitResult && !limitResult.success) {
+        return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+    }
+
     try {
         const { userId } = await auth()
         if (!userId) {
@@ -41,13 +47,20 @@ export async function POST(req: Request) {
 
         const client = await clerkClient()
         const user = await client.users.getUser(userId)
-        
+
         const currentCalls = (user.privateMetadata.api_calls as number) || 0;
         const isPremium = user.privateMetadata.is_premium === true;
-        
+
         // PAYWALL BLOCK
         if (!isPremium && currentCalls >= MAX_FREE_CALLS) {
             return NextResponse.json({ error: "PAYWALL_ACTIVE" }, { status: 403 })
+        }
+
+        // === VALIDAZIONE API KEY ===
+        const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY
+        if (!geminiKey) {
+            console.error("[Discovery API] GEMINI_API_KEY non configurata")
+            return NextResponse.json({ error: "Servizio AI non disponibile." }, { status: 503 })
         }
 
         const body = await req.json()
@@ -57,6 +70,7 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Dati non forniti" }, { status: 400 })
         }
 
+        const genAI = new GoogleGenerativeAI(geminiKey)
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             systemInstruction: "Sei l'AI Decision & Adoption Engine di VibeLoom. Il tuo obiettivo è analizzare il business dell'utente e generare ESATTAMENTE 3 diagnosi operativo-tecniche usando il formato JSON. Sii telegrafico, spietato e ultra-operativo.",
@@ -67,10 +81,10 @@ export async function POST(req: Request) {
         })
 
         const promptLanguage = language === 'en' ? "IMPORTANT: You MUST write the JSON values (title, area, rationale, workflow, etc) entirely in ENGLISH." : "Rispondi in italiano."
-        
+
         const prompt = `Analizza l'operatività dell'utente ed estrai 3 diagnosi in stile "Decision Engine".
 ${promptLanguage}
-        
+
 TESTO UTENTE:
 ${text || "Nessun testo esplicito."}
 
@@ -92,7 +106,14 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
         }
         cleanText = cleanText.trim()
 
-        const opportunities = JSON.parse(cleanText)
+        let opportunities: unknown
+        try {
+            opportunities = JSON.parse(cleanText)
+        } catch {
+            console.error("[Discovery API] JSON.parse fallito sul testo:", cleanText.slice(0, 200))
+            return NextResponse.json({ error: "Risposta AI non valida. Riprova." }, { status: 502 })
+        }
+
         // SCALA IL CREDITO SOLO SE NON E' PREMIUM
         if (!isPremium) {
             await client.users.updateUserMetadata(userId, {
@@ -103,11 +124,11 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
         }
 
         return NextResponse.json({ opportunities })
-        
-    } catch (error: any) {
-        console.error("[Discovery API] Errore critico:", error)
-        
-        // Risposta Mock di Fallback per prevenire crash totali
+
+    } catch (error: unknown) {
+        console.error("[Discovery API] Errore critico:", error instanceof Error ? error.message : error)
+
+        // Risposta Mock di Fallback — status 503 per segnalare degradazione al client
         const mockOpps = [
             {
                 title: "Inefficienza nel processo di acquisizione clienti", area: "Difesa della Cassa",
@@ -132,11 +153,10 @@ Obiettivo: Genera 3 priorità. Non dare spunti vaghi. Usa lo schema per indicare
             }
         ]
 
-        return NextResponse.json({ 
-            error: "Impossibile generare le opportunità in tempo reale.", 
-            debugInfo: error instanceof Error ? error.message : String(error),
+        return NextResponse.json({
+            error: "Impossibile generare le opportunità in tempo reale.",
             opportunities: mockOpps,
-            mock: true 
-        }, { status: 200 })
+            mock: true
+        }, { status: 503 })
     }
 }
