@@ -4,6 +4,8 @@ import { AUDIT_PROMPTS } from "@/lib/ai/prompts/audit-presets"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 
 const MAX_FREE_CALLS = 4;
+export const maxDuration = 60;
+export const preferredRegion = 'iad1'; // Force US execution to avoid EU 403 blocks on GCP Free Tier
 
 export async function POST(req: NextRequest) {
     try {

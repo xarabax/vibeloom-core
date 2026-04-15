@@ -3,6 +3,7 @@ import { NextResponse } from "next/server"
 import { auth, clerkClient } from "@clerk/nextjs/server"
 
 export const maxDuration = 60
+export const preferredRegion = 'iad1' // Force US execution to avoid EU 403 blocks on GCP Free Tier
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "")
 
