@@ -1,9 +1,8 @@
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai"
 import { NextResponse } from "next/server"
+import { rateLimit } from "@/lib/rate-limit"
 
 export const maxDuration = 60
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY || "")
 
 const scenarioSchema = {
     type: SchemaType.ARRAY,
@@ -23,6 +22,13 @@ const scenarioSchema = {
 }
 
 export async function POST(req: Request) {
+    // === RATE LIMITING ===
+    const ip = req.headers.get("x-forwarded-for") || "unknown"
+    const limitResult = rateLimit(ip)
+    if (limitResult && "success" in limitResult && !limitResult.success) {
+        return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 })
+    }
+
     try {
         const body = await req.json()
         const { messages, goal } = body
@@ -31,6 +37,14 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: "Messaggi non forniti" }, { status: 400 })
         }
 
+        // === VALIDAZIONE API KEY ===
+        const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENAI_API_KEY
+        if (!geminiKey) {
+            console.error("[Flowchart API] GEMINI_API_KEY non configurata")
+            return NextResponse.json({ error: "Servizio AI non disponibile." }, { status: 503 })
+        }
+
+        const genAI = new GoogleGenerativeAI(geminiKey)
         const model = genAI.getGenerativeModel({
             model: "gemini-2.5-flash",
             systemInstruction: "Sei il Master Strategist del Board. Il tuo compito è leggere la trascrizione della riunione e sintetizzare ESATTAMENTE 3 scenari strategici azionabili (Conservativo, Bilanciato, Aggressivo).",
@@ -40,7 +54,6 @@ export async function POST(req: Request) {
             }
         })
 
-        // Format history into a single structured transcript for the AI
         let transcript = `Obiettivo Focus: ${goal || "Non specificato"}\n\nTRASCRIZIONE DEL BOARD:\n---\n`
         for (const msg of messages) {
             if (msg.sender !== "system") {
@@ -51,15 +64,20 @@ export async function POST(req: Request) {
 
         const result = await model.generateContent(transcript)
         const responseText = result.response.text()
-        
-        const scenarios = JSON.parse(responseText)
-        
+
+        let scenarios: unknown
+        try {
+            scenarios = JSON.parse(responseText)
+        } catch {
+            console.error("[Flowchart API] JSON.parse fallito:", responseText.slice(0, 200))
+            return NextResponse.json({ error: "Risposta AI non valida. Riprova." }, { status: 502 })
+        }
+
         return NextResponse.json({ scenarios })
-        
-    } catch (error: any) {
-        console.error("[Flowchart API] Errore critico:", error)
-        
-        // Risposta Mock di Fallback per prevenire crash totali
+
+    } catch (error: unknown) {
+        console.error("[Flowchart API] Errore critico:", error instanceof Error ? error.message : error)
+
         const mockScenarios = [
             {
                 id: "mock1", type: "Conservativo", title: "Difesa del Core Business",
@@ -78,10 +96,10 @@ export async function POST(req: Request) {
             }
         ]
 
-        return NextResponse.json({ 
-            error: "Impossibile generare gli scenari in tempo reale.", 
+        return NextResponse.json({
+            error: "Impossibile generare gli scenari in tempo reale.",
             scenarios: mockScenarios,
-            mock: true 
-        }, { status: 200 }) // Status 200 per far comunque proseguire la UI con i mock
+            mock: true
+        }, { status: 503 })
     }
 }

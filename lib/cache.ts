@@ -47,13 +47,12 @@ function hashGoal(goal: string): string {
 }
 
 /**
- * Genera hash dei file (basato sul contenuto)
- * Usa solo i primi 10KB di ogni file per performance
+ * Genera hash dei file (basato sull'intero contenuto)
  */
 function hashFiles(files: { content: string; mimeType: string }[]): string {
     const contentSamples = files
-        .map(f => f.content.slice(0, 10000))  // Primi 10KB
-        .sort()  // Ordina per consistenza
+        .map(f => f.content)
+        .sort()  // Ordina per consistenza indipendente dall'ordine di upload
         .join("|")
     return sha256(contentSamples)
 }

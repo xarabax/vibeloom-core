@@ -5,37 +5,43 @@ import Stripe from "stripe"
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: Request) {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-        apiVersion: "2024-04-10" as any
-    })
-    
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || ""
-    const payload = await req.text()
-    const signature = req.headers.get("Stripe-Signature") as string
+    const stripeKey = process.env.STRIPE_SECRET_KEY
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
-    let event: Stripe.Event;
+    if (!stripeKey) {
+        console.error("❌ STRIPE_SECRET_KEY non configurata")
+        return NextResponse.json({ error: "Configurazione server non valida." }, { status: 500 })
+    }
+    if (!webhookSecret) {
+        console.error("❌ STRIPE_WEBHOOK_SECRET non configurata")
+        return NextResponse.json({ error: "Configurazione server non valida." }, { status: 500 })
+    }
+
+    const stripe = new Stripe(stripeKey, {
+        apiVersion: "2026-03-25.dahlia",
+    })
+
+    const payload = await req.text()
+    const signature = req.headers.get("Stripe-Signature") ?? ""
+
+    let event: Stripe.Event
 
     try {
-        if (!webhookSecret) {
-            throw new Error("Missing STRIPE_WEBHOOK_SECRET")
-        }
         event = stripe.webhooks.constructEvent(payload, signature, webhookSecret)
-    } catch (err: any) {
-        console.error(`❌ Webhook signature verification failed.`, err.message)
-        return NextResponse.json({ error: err.message }, { status: 400 })
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : "Firma non valida"
+        console.error(`❌ Webhook signature verification failed: ${message}`)
+        return NextResponse.json({ error: message }, { status: 400 })
     }
 
     try {
         switch (event.type) {
-            case "checkout.session.completed":
+            case "checkout.session.completed": {
                 const session = event.data.object as Stripe.Checkout.Session
                 const userId = session.client_reference_id
-                
+
                 if (userId) {
-                    console.log(`✅ Incasso confermato per utente ${userId}. Sblocco account...`)
                     const client = await clerkClient()
-                    
-                    // Impostiamo l'utente come Premium per saltare i paywall
                     await client.users.updateUserMetadata(userId, {
                         privateMetadata: {
                             is_premium: true,
@@ -45,18 +51,21 @@ export async function POST(req: Request) {
                             is_premium: true
                         }
                     })
-                    console.log(`🚀 Sblocco completato con successo.`)
+                    console.log(`✅ Utente ${userId} sbloccato come Premium.`)
                 } else {
                     console.warn("⚠️ Pagamento completato senza client_reference_id associato.")
                 }
-                break;
+                break
+            }
             default:
-                console.log(`Evento non gestito: ${event.type}`)
+                // Evento ricevuto ma non gestito — normale per Stripe
+                break
         }
 
         return NextResponse.json({ received: true }, { status: 200 })
-    } catch (error: any) {
-        console.error(`❌ Errore processamento webhook:`, error)
+    } catch (error: unknown) {
+        const message = error instanceof Error ? error.message : "Errore sconosciuto"
+        console.error(`❌ Errore processamento webhook: ${message}`)
         return NextResponse.json({ error: "Webhook handler failed" }, { status: 500 })
     }
 }
