@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { AdvisorId, getAdvisorById } from "@/lib/types/decision-mate"
-import { Send, Paperclip, CheckCircle2, FileText, ArrowRight, Loader2 } from "lucide-react"
+import { Send, Paperclip, FileText, ArrowRight, Loader2 } from "lucide-react"
 import { PaywallModal } from "./paywall-modal"
 import { useLanguage } from "@/lib/i18n/LanguageContext"
 
@@ -108,6 +108,18 @@ interface StepBoardSessionProps {
     onComplete: (messages: Message[]) => void
 }
 
+function getBoardErrorMessage(status: number, apiError?: string): string {
+    if (status === 429) return "⚠️ Troppe richieste. Attendi qualche secondo e riprova."
+    if (status === 503) return "⚠️ Servizio AI temporaneamente non disponibile. Riprova tra poco."
+    if (status === 502) return "⚠️ Il modello AI ha restituito una risposta non valida. Riprova."
+    if (status === 401) return "⚠️ Sessione scaduta. Ricarica la pagina e accedi di nuovo."
+    if (status === 403) return "⚠️ Accesso non autorizzato."
+    if (status === 500 && apiError) return `⚠️ Errore del server: ${apiError}`
+    if (status === 500) return "⚠️ Errore interno del server. Riprova tra poco."
+    if (apiError) return `⚠️ ${apiError}`
+    return "⚠️ Si è verificato un errore di connessione con il Board."
+}
+
 export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: StepBoardSessionProps) {
     const { t, language } = useLanguage()
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -151,8 +163,9 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
     const triggerInitialCustomAI = async (firstMessage: Message) => {
         setIsLoading(true)
+        let res: Response | undefined
         try {
-            const res = await fetch("/api/board-chat", {
+            res = await fetch("/api/board-chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -165,14 +178,18 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             })
 
             const data = await res.json()
-            
+
             if (res.status === 403 || data.error === "PAYWALL_ACTIVE") {
-                 setIsPaywallOpen(true)
-                 setIsLoading(false)
-                 return
+                setIsPaywallOpen(true)
+                setIsLoading(false)
+                return
             }
 
-            if (data.error && !data.mock) throw new Error(data.error)
+            if (!res.ok && !data.mock) {
+                const errorMsg = getBoardErrorMessage(res.status, data.error)
+                setMessages(prev => [...prev, { id: Date.now().toString(), sender: "system", text: errorMsg, timestamp: new Date() }])
+                return
+            }
 
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
@@ -180,16 +197,11 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                 text: data.text || "...",
                 timestamp: new Date()
             }
-            
             setMessages(prev => [...prev, aiMsg])
         } catch (error) {
-            console.error(error)
-             setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                sender: "system",
-                text: "⚠️ Si è verificato un errore di connessione con il Board.",
-                timestamp: new Date()
-            }])
+            console.error("[Board] triggerInitialCustomAI error:", error)
+            const errorMsg = res ? getBoardErrorMessage(res.status) : "⚠️ Impossibile raggiungere il server. Controlla la connessione."
+            setMessages(prev => [...prev, { id: Date.now().toString(), sender: "system", text: errorMsg, timestamp: new Date() }])
         } finally {
             setIsLoading(false)
         }
@@ -223,6 +235,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
 
         setIsLoading(true)
 
+        let res: Response | undefined
         try {
             const payloadHistory = currentHistory.filter(m => m.sender !== "system")
             if (isHiddenContext) {
@@ -234,7 +247,7 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                 })
             }
 
-            const res = await fetch("/api/board-chat", {
+            res = await fetch("/api/board-chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -249,13 +262,15 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
             const data = await res.json()
 
             if (res.status === 403 || data.error === "PAYWALL_ACTIVE") {
-                 setIsPaywallOpen(true)
-                 setIsLoading(false)
-                 return
+                setIsPaywallOpen(true)
+                setIsLoading(false)
+                return
             }
 
-            if (data.error && !data.mock) {
-                throw new Error(data.error)
+            if (!res.ok && !data.mock) {
+                const errorMsg = getBoardErrorMessage(res.status, data.error)
+                setMessages(prev => [...prev, { id: Date.now().toString(), sender: "system", text: errorMsg, timestamp: new Date() }])
+                return
             }
 
             const aiMsg: Message = {
@@ -264,17 +279,12 @@ export function StepBoardSession({ mode, goal, selectedAdvisors, onComplete }: S
                 text: data.text || "Nessuna risposta dal server.",
                 timestamp: new Date()
             }
-            
             setMessages(prev => [...prev, aiMsg])
 
         } catch (error) {
-            console.error("Chat Error:", error)
-            setMessages(prev => [...prev, {
-                id: Date.now().toString(),
-                sender: "system",
-                text: "⚠️ Si è verificato un errore di connessione con il Board.",
-                timestamp: new Date()
-            }])
+            console.error("[Board] handleSendMessage error:", error)
+            const errorMsg = res ? getBoardErrorMessage(res.status) : "⚠️ Impossibile raggiungere il server. Controlla la connessione."
+            setMessages(prev => [...prev, { id: Date.now().toString(), sender: "system", text: errorMsg, timestamp: new Date() }])
         } finally {
             setIsLoading(false)
         }
